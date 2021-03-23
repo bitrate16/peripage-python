@@ -27,7 +27,6 @@ Essentially, the script takes an input images, scales it to the printers native 
 ## Prerequirements
 * Peripage A6/A6+ printer
 * Python 3
-* 
 
 ## Installation
 
