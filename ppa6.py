@@ -639,7 +639,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mac', help='Bluetooth MAC address of the printer', required=True, type=str)
     parser.add_argument('-c', '--concentration', help='Concentration value for printing (0, 1, 2)', required=False, choices=[0, 1, 2], metavar='[0-2]', type=int, default=0)
     parser.add_argument('-b', '--break', dest='breaksize', help='Size of the break that should be inserted after the print (max 255)', required=False, choices=range(256), metavar='[0-255]', type=int, default=0)
-    parser.add_argument('-p', '--printer', help='Printer model name (A6 or A6+/A6p (both allowed))', required=True, choices=['A6', 'A6p', 'A6+'], type=str, default='A6')
+    parser.add_argument('-p', '--printer', help='Printer model name (A6 or A6+/A6p (both allowed))', required=False, choices=['A6', 'A6p', 'A6+'], type=str, default='A6')
     parser.add_argument('-n', '--newline', help='Force printer to add newline at the end of the printed text and flush the buffer', required=False, action='store_true')
     
     # Selection of the required action:
