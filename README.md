@@ -127,7 +127,7 @@ Newline is required to fush the internal printer buffer and force it to print al
 
 ## Code example
 
-View this [python notebook](ppa6-tutorial.ipynb) for tutorial
+View this [python notebook](notebooks/ppa6-tutorial.ipynb) for tutorial
 
 ## TODO
 
