@@ -8,6 +8,7 @@ def main():
     import argparse
     import sys
     from ppa6 import Printer, PrinterType
+    from PIL import Image
 
     parser = argparse.ArgumentParser(description='Print on a Peripage A6 / A6+ via bluetooth')
     parser.add_argument('-m', '--mac', help='Bluetooth MAC address of the printer', required=True, type=str)
@@ -22,7 +23,7 @@ def main():
     # 3. Print image from file
     # 4. Requist printer information
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-t', '--text', help='ASCII text that should be printed. Add a line break at the end of the string to avoid it being cut', type=str)
+    group.add_argument('-t', '--text', help='ASCII text that should be printed. Add a line break at the end of the string to avoid it being cut. String can be empty, so just page break will be printed', type=str)
     group.add_argument('-s', '--stream', help='Reads an input from stdin and prints as ASCII text')
     group.add_argument('-i', '--image', help='Path to the image that should be printed', type=str)
     group.add_argument('-e', '--introduce', help='Ask the printer to introduce himself', action='store_true')
@@ -33,11 +34,11 @@ def main():
 
     printer = Printer(args.mac, PrinterType.A6 if args.printer == 'A6' else PrinterType.A6p)
 
-    try:
-        printer.connect()
-    except:
-        print('Failed to open connection')
-        sys.exit(0)
+    #try:
+    printer.connect()
+    #except:
+    #    print('Failed to open connection')
+    #    sys.exit(0)
 
     if 'introduce' in args and args.introduce:
         
@@ -84,15 +85,16 @@ def main():
         
         line = args.text
         
-        if args.newline:
-            line += '\n'
-        
-        # Split text if it is too long
-        parts = [line[i:i+0xff] for i in range(0, len(line), 0xff)]
-        
-        for p in parts:
-            printer.writeASCII(p, wait=True)
-            # time.sleep(0.25)
+        if len(line) > 0:
+            if args.newline:
+                line += '\n'
+            
+            # Split text if it is too long
+            parts = [line[i:i+0xff] for i in range(0, len(line), 0xff)]
+            
+            for p in parts:
+                printer.writeASCII(p, wait=True)
+                # time.sleep(0.25)
         
         if 'breaksize' in args and args.breaksize > 0:
             printer.printBreak(args.breaksize)
@@ -124,4 +126,4 @@ def main():
         print('How did you get there?')
 
 if __name__ == '__main__':
-	main()
+    main()
