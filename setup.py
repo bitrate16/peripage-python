@@ -11,7 +11,7 @@ setup(
   download_url = 'https://github.com/bitrate16/ppa6-python/archive/v0.1.tar.gz',
   keywords = ['PERIPAGE', 'BLUETOOTH', 'THERMAL PRINTER', 'PRINTER'],
   install_requires=[
-          'PyBluez>=0.3',
+          'PyBluez>=0.23',
           'Pillow>=8.1.2',
 		  'argparse>=1.1',
       ],
