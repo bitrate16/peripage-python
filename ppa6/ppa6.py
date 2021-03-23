@@ -1,5 +1,10 @@
+# MIT License
+# 
+# Copyright (c) 2021 bitrate16
+
 import time
 import math
+import socket
 import bluetooth
 
 from PIL import Image, ImageOps
@@ -24,6 +29,8 @@ class Printer:
     use printing carefully and avoid overheating of the printer which 
     may result in hardware break.
     Currently there is no stop codes found, so you can not stop printing.
+        
+    It is required to perform reset() after connection to the printer.
     """
     
     def __init__(self, mac, printertype=PrinterType.A6, timeout=1.0):
@@ -33,6 +40,8 @@ class Printer:
         By default printer type is set to A6.
         By default timeout for connection / request is set to 1sec and 
         can be changed later with setTimeout(timeout).
+        
+        It is required to perform reset() after connection to the printer.
         
         TODO: Autimatically recognize printer type and avoid using 
         explicit definition or leave it for explicit compability bypassing.
@@ -46,9 +55,8 @@ class Printer:
         """
         
         self.mac = mac
+        self.timeout = timeout
         self.printerType = printertype
-        self.sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        self.sock.settimeout(timeout)
     
     def isConnected(self):
         """
@@ -65,18 +73,31 @@ class Printer:
         """
         Opens a new connection to the printer. Does not perform check if it
         was already connected or socket is in use.
+        
+        It is required to perform reset() after connection to the printer.
         """
         
+        self.sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        self.sock.settimeout(self.timeout)
         self.sock.connect((self.mac, 1))
     
     def reconnect(self):
         """
         Reconnects to the printer. If connection already exists, socket is 
         being closed first.
+        
+        It is required to perform reset() after connection to the printer.
+        
+        TODO: Figure out how to reconnect this bluetooth socket
         """
         
-        if isConnected():
+        if self.isConnected():
+            # self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
+            del self.sock
+        
+        self.sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        self.sock.settimeout(self.timeout)
         self.sock.connect((self.mac, 1))
     
     def disconnect(self):
@@ -84,8 +105,10 @@ class Printer:
         Disconnects from the printer.
         """
         
-        if isConnected():
+        if self.isConnected():
+            # self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
+            del self.sock
     
     def setTimeout(self, timeout):
         """
@@ -95,6 +118,7 @@ class Printer:
         :type timeout: float
         """
 
+        self.timeout = timeout
         self.sock.settimeout(timeout)
     
     
@@ -165,7 +189,7 @@ class Printer:
         
         return self.askPrinter(bytes.fromhex('10ff20f0'))
 
-    def getDeviceName():
+    def getDeviceName(self):
         """
         Returns Device Name as response of 0x10ff3011.
         For example, Peripage A6+ returns 'PeriPage+DF7A'
@@ -173,7 +197,7 @@ class Printer:
         
         return self.askPrinter(bytes.fromhex('10ff3011'))
 
-    def getDeviceSerialNumber():
+    def getDeviceSerialNumber(self):
         """
         Returns Serial Number as response of 0x10ff20f2.
         For example, Peripage A6+ returns 'A6491571121'
@@ -181,7 +205,7 @@ class Printer:
         
         return self.askPrinter(bytes.fromhex('10ff20f2'))
 
-    def getDeviceFirmware():
+    def getDeviceFirmware(self):
         """
         Returns Firmware Version as response of 0x10ff20f1.
         For example, Peripage A6+ returns 'V2.11_304dpi'
@@ -189,7 +213,7 @@ class Printer:
         
         return self.askPrinter(bytes.fromhex('10ff20f1'))
 
-    def getDeviceBattery():
+    def getDeviceBattery(self):
         """
         Returns battery value as response of 0x10ff50f1.
         For example, Peripage A6+ returns '\x00@' (sample retult).
@@ -198,7 +222,7 @@ class Printer:
         """
         return int(self.askPrinter(bytes.fromhex('10ff50f1'))[1])
 
-    def getDeviceHardware():
+    def getDeviceHardware(self):
         """
         Returns Hardware Info as response of 0x10ff3010.
         For example, Peripage A6+ returns 'BR2141e-s(A02)_B9_20190815_r3460',
@@ -208,7 +232,7 @@ class Printer:
         
         return self.askPrinter(bytes.fromhex('10ff3010'))
 
-    def getDeviceMAC():
+    def getDeviceMAC(self):
         """
         Returns Device's MAC address as response of 0x10ff3012.
         For example, Peripage A6+ returns 
@@ -218,7 +242,7 @@ class Printer:
         
         return self.askPrinter(bytes.fromhex('10ff3012'))
 
-    def getDeviceFull():
+    def getDeviceFull(self):
         """
         Returns Full device information as response of 0x10ff70f1.
         For example, Peripage A6+ returns 
@@ -228,7 +252,7 @@ class Printer:
         level 84%.
         """
         
-        return self.askPrinter(bytes.fromhex('10ff3012'))
+        return self.askPrinter(bytes.fromhex('10ff70f1'))
     
     def getRowBytes(self):
         """
@@ -344,6 +368,8 @@ class Printer:
         Performs reset operation (The initial purpose of it is stoll unknown) 
         required before printing stream of bytes in a binary image.
         Opcode for this operation is 0x10fffe01 followed by 0x000000000000000000000000.
+        This operation has to be performed before any other printing operation and after 
+        connect to printer.
         """
         
         self.tellPrinter(bytes.fromhex('10fffe01000000000000000000000000'))
@@ -361,7 +387,7 @@ class Printer:
         strsize = '{0:0{1}X}'.format(size, 2)
         self.tellPrinter(bytes.fromhex('1b4a' + strsize))
     
-    def writeASCII(self, text='\n', wait='True'):
+    def writeASCII(self, text='\n', wait=False):
         """
         Write raw ASCII string to the printer.
         By default this printer accepts an ascii string for printing it with raw monospace
@@ -415,13 +441,15 @@ class Printer:
         
         # We're done here
     
-    def printImageBytes(self, imagebytes, delay=0.01): 
+    def printImageRowBytesList(self, imagebytes, delay=0.01): 
         """
         Performs printing of the Image bytes. Image width expected to match getRowBytes(), in other 
         case it will be cut or pad with bytes.
         Input image is being split into multiple pieces if height exceeds 0xff pixels. This should 
         be done because of the limitation in 0xffff pixels in height for single page, but i limit 
         by 0xff.
+        imagebytes defines the list with rows. Each row is defined by bytes.
+        For example: [0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff]
         
         :param imagebytes: array of bytes containing rows of the image
         :type imagebytes: list
@@ -433,8 +461,6 @@ class Printer:
         expectedLen = self.getRowBytes()
         nPieces = math.ceil(imgHeight / 0xff)
         restPixels = imgHeight % 0xff
-        
-        cursor = 0
         
         for i in range(nPieces):
             # Size of each print is 0xff, but last print has size restPixels
@@ -450,7 +476,7 @@ class Printer:
                 self.tellPrinter(bytes.fromhex(f'1d7630004800{heightHex}00'))
             
             for j in range(height):
-                rowbytes = imagebytes[i*0xff+j:i*0xff+j+1]
+                rowbytes = imagebytes[i*0xff+j]
             
                 if len(rowbytes) < expectedLen:
                     rowbytes = rowbytes.ljust(expectedLen, bytes.fromhex('00'))
@@ -460,10 +486,49 @@ class Printer:
                 self.tellPrinter(rowbytes)
                 
                 time.sleep(delay)
-            
-            self.reset()
     
-    def printImage(self, img, resample=Image.NEAREST): 
+    def printImageBytes(self, imagebytes, delay=0.01): 
+        """
+        Performs printing of the Image bytes. Image width expected to match getRowBytes(), in other 
+        case it will shift while printing and the last for not matching length of getRowBytes() 
+        will be cut.
+        Input image is being split into multiple pieces if height exceeds 0xff pixels. This should 
+        be done because of the limitation in 0xffff pixels in height for single page, but i limit 
+        by 0xff.
+        imagebytes defines the entime image despite to printImageBytesList argument
+        For example: [0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff] will be defined as
+        0xff00000000ff00000000ff00000000ff.
+        
+        :param imagebytes: bytes containing rows of the image
+        :type imagebytes: bytes
+        :param delay: delay between sending each row
+        :type delay: float
+        """
+        
+        expectedLen = self.getRowBytes()
+        imgHeight = math.floor(len(imagebytes) / expectedLen)
+        nPieces = math.ceil(imgHeight / 0xff)
+        restPixels = imgHeight % 0xff
+        
+        for i in range(nPieces):            
+            self.reset()
+            
+            # Size of each print is 0xff, because last part is cut off
+            height = 0xff if i < nPieces-1 else restPixels
+            heightHex = 'ff' if i < nPieces-1 else '{0:0{1}X}'.format(restPixels, 2)
+            
+            # Notify printer about incomming $expectedLen bytes row
+            if self.printerType == PrinterType.A6:
+                self.tellPrinter(bytes.fromhex(f'1d7630003000{heightHex}00'))
+            else:
+                self.tellPrinter(bytes.fromhex(f'1d7630004800{heightHex}00'))
+            
+            for j in range(height):
+                self.tellPrinter(imagebytes[i*0xff + j*expectedLen:i*0xff + (j+1)*expectedLen])
+                
+                time.sleep(delay)
+    
+    def printImage(self, img, delay=0.01, resample=Image.NEAREST): 
         """
         Performs printing of PIL image. Image is being rescaled to match width of getRowPixels().
         Result image is converted to '1' binary mode. If image width exceeds limit of 0xff pixels 
@@ -471,17 +536,20 @@ class Printer:
         
         :param img: image to print
         :type img: Image
+        :param delay: delay between sending each row
+        :type delay: float
         :param resample: image resampling mode (Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.ANTIALIAS)
         """
         
+        img = img.convert('L')
         img = ImageOps.invert(img)
-        img = img.resize((getRowWidth(), int(getRowWidth() / img.size[0] * img.size[1])), resample)
+        img = img.resize((self.getRowWidth(), int(self.getRowWidth() / img.size[0] * img.size[1])), resample)
         img = img.convert('1')
         
         imgbytes = img.tobytes()
         self.printImageBytes(imgbytes)
     
-    def printRowBytesIterator(self, rowiterator, delay=0.01):
+    def printRowBytesIterator(self, rowiterator, delay=0.25):
         """
         Allows printing image using iterator / generator that should return bytes
         of row as result. If amount of returned bytes do not match getRowBytes(),
@@ -497,7 +565,7 @@ class Printer:
             time.sleep(delay)
     
     
-    def printRowIterator(self, rowiterator, delay=0.01):
+    def printRowIterator(self, rowiterator, delay=0.25):
         """
         Allows printing image using iterator / generator that should return image size of 
         (getRowWidth(), 1) as result. Returned image is geing resampled and printed as a row.
@@ -511,7 +579,55 @@ class Printer:
         
         for r in rowiterator:
             self.printImage(r)
+            time.sleep(delay)
     
+    def printRowBytesIteratorOfSize(self, rowiterator, rowcount, delay=0.01):
+        """
+        Allows printing image using iterator / generator that should return bytes
+        of row as result. If amount of returned bytes do not match getRowBytes(),
+        they will be pad or cut.
+        Additional parameter for this function is amount of rows that should be 
+        reserved for printing. This is usefull for printing long procedural 
+        generated pages when printing using single row commit is too slow.
+        
+        :param rowiterator: iterator or generator returning bytes describing rows of the image.
+        :param rowcount: amount of rows to reserve for printing in range (0x1, 0xffff)
+        :type rowcount: int
+        :param delay: delay between sending each row
+        :type delay: float
+        """
+        
+        rowcount = min(0xffff, max(0x1, rowcount))
+        rowcountstr = '{0:0{1}X}'.format(rowcount, 4)
+        rowcountstr = rowcountstr[2:4] + rowcountstr[0:2]
+        
+        self.reset()
+
+        # Notify printer about incomming bytes
+        if self.printerType == PrinterType.A6:
+            self.tellPrinter(bytes.fromhex(f'1d7630003000{rowcountstr}'))
+        elif self.printerType == PrinterType.A6p:
+            self.tellPrinter(bytes.fromhex(f'1d7630004800{rowcountstr}'))
+        else:
+            raise ValueError('Unsupported printer type')
+        
+        expectedLen = self.getRowBytes()
+        
+        for i, r in enumerate(rowiterator):
+            rowbytes = r
+            
+            if len(rowbytes) < expectedLen:
+                rowbytes = rowbytes.ljust(expectedLen, bytes.fromhex('00'))
+            elif len(rowbytes) > expectedLen:
+                rowbytes = rowbytes[:expectedLen]
+            
+            self.tellPrinter(rowbytes)
+            
+            time.sleep(delay)
+            
+            if i == rowcount - 1:
+                break
+
 
 # Entry for cli utility
 if __name__ == '__main__':
