@@ -1,1 +1,2 @@
 PyBluez==0.3
+Pillow==8.1.2
