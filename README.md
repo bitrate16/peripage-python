@@ -38,7 +38,7 @@ Essentially, the script takes an input images, scales it to the printers native 
 Install dependencies with
 `pip install -r requirements.txt`
 
-Identify printer Bluetooth MAC address
+## Identify printer Bluetooth MAC address
 
 **On linux:**
 
