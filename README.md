@@ -28,7 +28,7 @@ Essentially, the script takes an input images, scales it to the printers native 
 * Peripage A6/A6+ printer
 * Python 3
 * `pip install -r requirements.txt`
-* `pip install ppa6 --user` (optional if you want to use it as import)
+* `python setup.py install` (optional if you want to use it as import)
 
 ## Dependencies
 * `PyBluez==0.30`
