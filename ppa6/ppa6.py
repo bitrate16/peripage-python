@@ -438,7 +438,7 @@ class Printer:
         
         for i in range(nPieces):
             # Size of each print is 0xff, but last print has size restPixels
-            height = 0xff if if i < nPieces-1 else restPixels
+            height = 0xff if i < nPieces-1 else restPixels
             heightHex = 'ff' if i < nPieces-1 else '{0:0{1}X}'.format(restPixels, 2)
             
             self.reset()
