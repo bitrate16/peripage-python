@@ -131,6 +131,7 @@ View this [python notebook](ppa6-tutorial.ipynb) for tutorial
 
 ## TODO
 
+* Implement CLI QR code printing
 * Implement overheat protection
 * Implement cover open handler
 * Tweak wait timings to precisely match the printing speed
