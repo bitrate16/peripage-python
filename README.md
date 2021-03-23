@@ -97,8 +97,8 @@ Install module and run
 ### Options
 
 ```
-usage: ppa6 [-h] -m MAC [-c [0-2]] [-b [0-255]] -p {A6,A6p,A6+} [-n]
-               (-t TEXT | -s STREAM | -i IMAGE | -e)
+usage: ppa6 [-h] -m MAC [-c [0-2]] [-b [0-255]] [-p {A6,A6p,A6+}] [-n]
+                   (-t TEXT | -s STREAM | -i IMAGE | -e)
 
 Print on a Peripage A6 / A6+ via bluetooth
 
@@ -115,7 +115,8 @@ optional arguments:
   -n, --newline         Force printer to add newline at the end of the printed
                         text and flush the buffer
   -t TEXT, --text TEXT  ASCII text that should be printed. Add a line break at
-                        the end of the string to avoid it being cut
+                        the end of the string to avoid it being cut. String
+                        can be empty, so just page break will be printed
   -s STREAM, --stream STREAM
                         Reads an input from stdin and prints as ASCII text
   -i IMAGE, --image IMAGE
