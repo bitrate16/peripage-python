@@ -27,6 +27,13 @@ class Printer:
         
         TODO: Autimatically recognize printer type and avoid using 
         explicit definition or leave it for explicit compability bypassing.
+        
+        :param mac: MAC address of the printer
+        :type mac: str
+        :param printerType: type of the printer
+        :type printerType: PrinterType
+        :param timeout: timeot for connection
+        :type timeout: float
         """
         
         self.mac = mac
@@ -74,6 +81,9 @@ class Printer:
     def setTimeout(self, timeout):
         """
         Used to set a connection / send / recv timeout for bluetooth socket.
+        
+        :param timeout: new timeout value
+        :type timeout: float
         """
 
         self.sock.settimeout(timeout)
@@ -82,6 +92,9 @@ class Printer:
     def tellPrinter(self, byteseq):
         """
         Send byte sequence to the printer and return, no response is expected
+        
+        :param byteseq: bytes of information to send
+        :type byteseq: bytes
         """
         
         self.sock.send(byteseq)
@@ -89,6 +102,11 @@ class Printer:
     def askPrinter(self, byteseq, recv_size=1024):
         """
         Send byte sequence to the printer and receive recv_size bytes as response
+        
+        :param byteseq: bytes of information to send
+        :type byteseq: bytes
+        :param recv_size: receiver buffer size
+        :type recv_size: int
         """
         
         self.sock.send(byteseq)
@@ -97,6 +115,9 @@ class Printer:
     def listenPrinter(self, recv_size=1024):
         """
         Receive recv_size bytes from the printer
+        
+        :param recv_size: receiver buffer size
+        :type recv_size: int
         """
         
         return self.sock.recv(recv_size)
@@ -104,6 +125,9 @@ class Printer:
     def tellPrinterSeq(self, byteseq):
         """
         Send byte sequence list to the printer and return, no response is expected
+        
+        :param byteseq: array or bytes[]
+        :type byteseq: list
         """
         
         for s in byteseq:
@@ -112,6 +136,11 @@ class Printer:
     def askPrinterSeq(self, byteseq, recv_size=1024):
         """
         Send byte sequence list to the printer and receive recv_size bytes as response
+        
+        :param byteseq: array or bytes[]
+        :type byteseq: list
+        :param recv_size: receiver buffer size
+        :type recv_size: int
         """
         
         for s in byteseq:
@@ -242,6 +271,11 @@ class Printer:
         corruption or S/N read timeouts (which can be fixed by writing a new correct S/N).
         Limitations for S/N string are not currently determined.
         Call to 0x10ff20f4 returns 'OK' as the result of S/N change.
+        
+        :param snstr: new serial number
+        :type snstr: str
+        :param wait: wait for response
+        :type wait: bool
         """
         
         tellPrinter(bytes.fromhex('10ff20f4'))
@@ -255,6 +289,11 @@ class Printer:
         Sets the device timeout (in minutes) to the value (bound between 0x0001 and 0xfff0) 
         using 0x10ff12.
         Call to 0x10ff12 returns 'OK' as the result of timeout change.
+        
+        :param timeout: power timeout in range (0x0001, 0xfff0)
+        :type timeout: int
+        :param wait: wait for response
+        :type wait: bool
         """
         
         timeout = max(min(0xfff0, timeout), 0x0001)
@@ -269,6 +308,11 @@ class Printer:
         Sets the printing concentration using 0x10ff1000 opcode.
         Currently allowed values are 0, 1, 2 which represents light, medium, hard 
         (heating intensivity). Other values are not tested yet.
+        
+        :param cons: concentration (0, 1, 2)
+        :type cons: int
+        :param wait: wait for response
+        :type wait: bool
         """
         
         opcode = ''
@@ -299,6 +343,9 @@ class Printer:
         """
         Asks printer to print a line break with specified size (in pixels) using 0x1b4a. 
         Value expected in range (0x01, 0xff).
+        
+        :param text: size of break in range (0x1, 0xff)
+        :type text: int
         """
         
         size = min(0xff, max(0x01, size))
@@ -315,6 +362,11 @@ class Printer:
         This function expects only ASCII characters without control codes (0x00-0x20, 0xFF).
         This function is not recommended to use while printer is in byte stream printing mode
         or while it expects arguments for some of it's opcodes.
+        
+        :param text: string containing ASCII characters
+        :type text: str
+        :param wait: wait for response
+        :type wait: bool
         """
         
         if wait:
@@ -331,6 +383,9 @@ class Printer:
         specified printer model (Refer to getRowBytes() for more information).
         If amount of bytes exceeeds or under the required by this printer type, bytes array will 
         be cut or pad with zeros.
+        
+        :param rowbytes: bytes array of size getRowBytes() representing a single row
+        :type rowbytes: bytes
         """
         
         expectedLen = getRowBytes()
@@ -351,7 +406,10 @@ class Printer:
         
         # We're done here
     
-    def printImageBytes(self, imagebytes): # Byte array, should be sliced to match size
+    def printImageBytes(self, imagebytes): 
+        """"""
+        
+        # Byte array, should be sliced to match size
         pass
     
     def printImage(self, image): # Pil image should be sliced and processed to match size
