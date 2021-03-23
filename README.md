@@ -39,7 +39,9 @@ pip install . --user
 
 **Install from pypi using pip**
 
-`pip install ppa6`
+```
+pip install ppa6
+```
 
 ## Dependencies
 * `PyBluez==0.30`
