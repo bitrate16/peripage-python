@@ -133,7 +133,7 @@ optional arguments:
 
 ### Print image example
 
-**Print image from [file](honk.png) with following break for 100px and concentration set to 2 (HIGH) on A6+**
+**Print image from [file](https://github.com/bitrate16/ppa6-python/blob/main/honk.png) with following break for 100px and concentration set to 2 (HIGH) on A6+**
 ```
 ppa6 -m 00:15:83:15:bc:5f -p A6p -b 100 -c 2 -i honk.png
 ```
@@ -148,7 +148,7 @@ Newline is required to fush the internal printer buffer and force it to print al
 
 ## Code example
 
-View this [python notebook](notebooks/ppa6-tutorial.ipynb) for tutorial
+View this [python notebook](https://github.com/bitrate16/ppa6-python/blob/main/notebooks/ppa6-tutorial.ipynb) for tutorial
 
 ## TODO
 
