@@ -51,6 +51,13 @@ pip install ppa6
 Install dependencies with
 `pip install -r requirements.txt`
 
+On windows you may need to install PyBluez 0.3
+```
+git clone https://github.com/pybluez/pybluez
+cd pybluez
+pip install . --user
+```
+
 ## Identify printer Bluetooth MAC address
 
 **On linux:**
