@@ -4,6 +4,12 @@
 # 
 # Copyright (c) 2021 bitrate16
 
+__title__ = 'Peripage A6/A6+ buetooth printing utility'
+__version__ = '0.1'
+__author__ = 'bitrate16'
+__license__ = 'MIT'
+__copyright__ = 'Copyright (c) 2021 bitrate16'
+
 import time
 import math
 import socket
