@@ -65,6 +65,9 @@ class Printer:
         self.mac = mac
         self.timeout = timeout
         self.printerType = printertype
+        
+        # This buffer is used for continuous printing
+        self.printBuffer = ''
     
     def isConnected(self):
         """
@@ -295,6 +298,20 @@ class Printer:
             return 576
         else:
             raise ValueError('Unsupported printer type')
+    
+    def getRowCharacters(self):
+        """
+        Returns amount of characters that may fit in a single row.
+        By default A6+ can fit up to 48 characters, A6 can fit up to 32 characters.
+        """
+        
+        if self.printerType == PrinterType.A6:
+            # TODO: Measure amount of characters that can fit in the line
+            return 32
+        elif self.printerType == PrinterType.A6p:
+            return 48
+        else:
+            raise ValueError('Unsupported printer type')
         
     def getHeightLimit(self):
         """
@@ -397,14 +414,17 @@ class Printer:
     
     def writeASCII(self, text='\n', wait=False):
         """
+        Deprecated.
         Write raw ASCII string to the printer.
         By default this printer accepts an ascii string for printing it with raw monospace
-        font. Printer has internal buffer (48 characters in Peripage A6+) that will 
+        font. Printer has internal buffer (getRowCharacters()) that will 
         accumulate the received characters. Printer will print out the buffer if meets a '\n' 
         character or buffer overflows.
         This function expects only ASCII characters without control codes (0x00-0x20, 0xFF).
         This function is not recommended to use while printer is in byte stream printing mode
         or while it expects arguments for some of it's opcodes.
+        If string contains sequently repeating '\n' characters, the printer may freeze. So 
+        it's recommended to use printASCII() instead.
         
         :param text: string containing ASCII characters
         :type text: str
@@ -416,6 +436,148 @@ class Printer:
             return self.askPrinter(bytes(text, 'ascii'))
         else:
             self.tellPrinter(bytes(text, 'ascii'))
+    
+    def printlnASCII(self, text='\n', delay=0.25):
+        """
+        Write raw ASCII string to the printer.
+        By default this printer accepts an ascii string for printing it with raw monospace
+        font. Printer has internal buffer (getRowCharacters()) that will 
+        accumulate the received characters. Printer will print out the buffer if meets a '\n' 
+        character or buffer overflows.
+        This function expects only ASCII characters without control codes (0x00-0x20, 0xFF).
+        This function is not recommended to use while printer is in byte stream printing mode
+        or while it expects arguments for some of it's opcodes.
+        If string contains sequently repeating '\n' characters, they will be replaced with 
+        printBreak(30) which matches the length of the '\n\n'. This function automatically 
+        slices string into pieces of size getRowCharacters() and waits till new piece being 
+        printed.
+        This function acts as println. This function will print out the data stored in the 
+        buffer of printASCII()
+        
+        :param text: string containing ASCII characters
+        :type text: str
+        :param delay: delay between sending each line
+        :type delay: float
+        """
+        
+        # Remove non-ASCII & control (except \n)
+        text = ''.join([i for i in text if (31 < ord(i) or ord(i) == 10) and ord(i) < 127])
+        
+        # Check for empty and print out newline
+        text = self.printBuffer + text
+        if len(text) == 0:
+            self.printBreak(30)
+            time.sleep(delay)
+            return
+        
+        lines = text.split('\n')
+        self.printBuffer = ''
+        
+        for l in lines:
+            # Replace every empty line with break matching newline height
+            if len(l) == 0:
+                self.printBreak(30)
+                time.sleep(delay)
+            else:
+                # Split to lines
+                parts = [l[i:i+self.getRowCharacters()] for i in range(0, len(l), self.getRowCharacters())]
+                
+                for i, p in enumerate(parts):
+                    self.tellPrinter(bytes(p, 'ascii'))
+                    if i != 0:
+                        time.sleep(delay)
+                
+                # Push last line from the buffer
+                self.tellPrinter(bytes('\n', 'ascii'))
+                time.sleep(delay)
+    
+    def printASCII(self, text='\n', delay=0.25):
+        """
+        Write raw ASCII string to the printer.
+        By default this printer accepts an ascii string for printing it with raw monospace
+        font. Printer has internal buffer (getRowCharacters()) that will 
+        accumulate the received characters. Printer will print out the buffer if meets a '\n' 
+        character or buffer overflows.
+        This function expects only ASCII characters without control codes (0x00-0x20, 0xFF).
+        This function is not recommended to use while printer is in byte stream printing mode
+        or while it expects arguments for some of it's opcodes.
+        If string contains sequently repeating '\n' characters, they will be replaced with 
+        printBreak(30) which matches the length of the '\n\n'. This function automatically 
+        slices string into pieces of size getRowCharacters() and waits till new piece being 
+        printed.
+        This function uses in class buffer to store tail of the text if text didn't end with 
+        '\n'.
+        
+        :param text: string containing ASCII characters
+        :type text: str
+        :param delay: delay between sending each line
+        :type delay: float
+        """
+        
+        # Remove non-ASCII & control (except \n)
+        text = ''.join([i for i in text if (31 < ord(i) or ord(i) == 10) and ord(i) < 127])
+        
+        # Check for empty and print out newline
+        text = self.printBuffer + text
+        self.printBuffer = ''
+        if len(text) == 0:
+            return
+        
+        endLineBreak = text[-1] == '\n'
+        lines = text.split('\n')
+        
+        for i, l in enumerate(lines):
+            # Replace every empty line with break matching newline height
+            if len(l) == 0:
+                self.printBreak(30)
+                time.sleep(delay)
+            else:
+                # Split to lines
+                parts = [l[i:i+self.getRowCharacters()] for i in range(0, len(l), self.getRowCharacters())]
+                
+                for j, p in enumerate(parts):
+                    # If this is the last part of the text and it ends with '\n', push it
+                    if j == len(parts)-1:
+                        if i == len(lines)-1:
+                            if endLineBreak:
+                                self.tellPrinter(bytes(p, 'ascii'))
+                                time.sleep(delay)
+                                self.tellPrinter(bytes('\n', 'ascii'))
+                                time.sleep(delay)
+                            else:
+                                self.printBuffer = p
+                                
+                                # Push out the string that is a full row
+                                if len(p) == self.getRowCharacters():
+                                    self.tellPrinter(bytes(p, 'ascii'))
+                                    time.sleep(delay)
+                                    self.tellPrinter(bytes('\n', 'ascii'))
+                                    time.sleep(delay)
+                                    self.printBuffer = ''
+                        else:
+                            self.tellPrinter(bytes(p, 'ascii'))
+                            time.sleep(delay)
+                            self.tellPrinter(bytes('\n', 'ascii'))
+                            time.sleep(delay)
+                    else:
+                        self.tellPrinter(bytes(p, 'ascii'))
+                        if j != 0:
+                            time.sleep(delay)
+    
+    def flushASCII(self, delay=0.25):
+        """
+        Prints out the buffer used in printASCII() followed by newline.
+        
+        :param delay: delay between sending each line
+        :type delay: float
+        """
+        
+        if len(self.printBuffer) > 0:
+            self.tellPrinter(bytes(self.printBuffer, 'ascii'))
+            time.sleep(delay)
+            self.tellPrinter(bytes('\n', 'ascii'))
+            time.sleep(delay)
+            self.printBuffer = ''
     
     def printRow(self, rowbytes):
         """

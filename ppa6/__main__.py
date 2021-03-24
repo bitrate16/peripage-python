@@ -24,7 +24,7 @@ def main():
     # 4. Requist printer information
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-t', '--text', help='ASCII text that should be printed. Add a line break at the end of the string to avoid it being cut. String can be empty, so just page break will be printed', type=str)
-    group.add_argument('-s', '--stream', help='Reads an input from stdin and prints as ASCII text')
+    group.add_argument('-s', '--stream', help='Reads an input from stdin and prints as ASCII text', action='store_true')
     group.add_argument('-i', '--image', help='Path to the image that should be printed', type=str)
     group.add_argument('-e', '--introduce', help='Ask the printer to introduce himself', action='store_true')
 
@@ -56,16 +56,9 @@ def main():
         
         while True:
             try:
-                line = input() + '\n'
+                line = input()
                 
-                # Split line if it is too long
-                parts = [line[i:i+0xff] for i in range(0, len(line), 0xff)]
-                
-                for p in parts:
-                    printer.writeASCII(p, wait=False)
-                    
-                    # TODO: Measure timing to avoid internal buffer overflow
-                    time.sleep(0.25)
+                printer.printlnASCII(line)
                 
             except EOFError:
                 # Input closed ^d^d
@@ -84,17 +77,11 @@ def main():
         printer.reset()
         
         line = args.text
+        if args.newline:
+            line += '\n'
         
         if len(line) > 0:
-            if args.newline:
-                line += '\n'
-            
-            # Split text if it is too long
-            parts = [line[i:i+0xff] for i in range(0, len(line), 0xff)]
-            
-            for p in parts:
-                printer.writeASCII(p, wait=True)
-                # time.sleep(0.25)
+            printer.printASCII(line)
         
         if 'breaksize' in args and args.breaksize > 0:
             printer.printBreak(args.breaksize)

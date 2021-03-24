@@ -150,6 +150,10 @@ Newline is required to fush the internal printer buffer and force it to print al
 
 View this [python notebook](https://github.com/bitrate16/ppa6-python/blob/main/notebooks/ppa6-tutorial.ipynb) for tutorial
 
+## Printer disassembly
+
+View this [photos](https://github.com/bitrate16/ppa6-python/blob/main/disassembly)
+
 ## TODO
 
 * Implement CLI QR code printing
@@ -177,4 +181,4 @@ SOFTWARE.**
 
 ## License
 
-[MIT License](LICENSE)
+[MIT License](https://github.com/bitrate16/ppa6-python/blob/main/LICENSE)
