@@ -3,18 +3,19 @@ from setuptools import setup
 setup(
   name = 'ppa6',
   packages = ['ppa6'],
-  version = '0.1',
+  version = '0.3',
   license='MIT',
   description = 'Utility for printing on Peripage A6/A6+ via bluetooth',
   author = 'bitrate16',
   author_email = 'bitrate16@gmail.com',
   url = 'https://github.com/bitrate16/ppa6-python',
-  download_url = 'https://github.com/bitrate16/ppa6-python/archive/v0.1.tar.gz',
+  download_url = 'https://github.com/bitrate16/ppa6-python/archive/v0.3.tar.gz',
   keywords = ['PERIPAGE', 'BLUETOOTH', 'THERMAL PRINTER', 'PRINTER'],
   install_requires=[
           'PyBluez>=0.23',
           'Pillow>=8.1.2',
 		  'argparse>=1.1',
+		  'qrcode>=6.1',
       ],
   classifiers=[
     'Development Status :: 4 - Beta',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package

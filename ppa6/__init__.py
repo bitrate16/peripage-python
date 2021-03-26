@@ -5,13 +5,14 @@
 # Copyright (c) 2021 bitrate16
 
 __title__ = 'Peripage A6/A6+ buetooth printing utility'
-__version__ = '0.1'
+__version__ = '0.3'
 __author__ = 'bitrate16'
 __license__ = 'MIT'
 __copyright__ = 'Copyright (c) 2021 bitrate16'
 
 import time
 import math
+import qrcode
 import socket
 import bluetooth
 
@@ -261,9 +262,11 @@ class Printer:
         which means that it's name is 'PeriPage+DF7A', mac is 00:F5:73:25:AC:9F, 
         connected to mac C5:12:81:19:2C:51, F/W V2.11_304dpi, S/N A6491571121, battery
         level 84%.
+        Use with care. This command has sub effect causing the printed images to corrupt 
+        shifting horisontally and adding a █ character to ASCII buffer.
         """
         
-        return self.askPrinter(bytes.fromhex('10ff70f1'))
+        return self.askPrinter(bytes.fromhex('10ff70f100'))
     
     def getRowBytes(self):
         """
@@ -452,7 +455,7 @@ class Printer:
         slices string into pieces of size getRowCharacters() and waits till new piece being 
         printed.
         This function acts as println. This function will print out the data stored in the 
-        buffer of printASCII()
+        buffer of printASCII().
         
         :param text: string containing ASCII characters
         :type text: str
@@ -463,6 +466,10 @@ class Printer:
         # Remove non-ASCII & control (except \n)
         text = ''.join([i for i in text if (31 < ord(i) or ord(i) == 10) and ord(i) < 127])
         
+        ## Remove last '\n' to avoid it's duplication
+        #if len(text) > 0 and text[-1] == '\n':
+        #    text = text[:-1]
+        #
         # Check for empty and print out newline
         text = self.printBuffer + text
         if len(text) == 0:
@@ -524,6 +531,16 @@ class Printer:
             return
         
         endLineBreak = text[-1] == '\n'
+        
+        # Remove last '\n' to avoid it's duplication
+        if len(text) > 0 and text[-1] == '\n':
+            if len(text) == 1:
+                self.printBreak(30)
+                time.sleep(delay)
+                return
+            
+            text = text[:-1]
+        
         lines = text.split('\n')
         
         for i, l in enumerate(lines):
@@ -623,7 +640,7 @@ class Printer:
         
         :param imagebytes: array of bytes containing rows of the image
         :type imagebytes: list
-        :param delay: delay between sending each row
+        :param delay: delay between sending each row of the image
         :type delay: float
         """
         
@@ -671,7 +688,7 @@ class Printer:
         
         :param imagebytes: bytes containing rows of the image
         :type imagebytes: bytes
-        :param delay: delay between sending each row
+        :param delay: delay between sending each row of the image
         :type delay: float
         """
         
@@ -706,7 +723,7 @@ class Printer:
         
         :param img: image to print
         :type img: Image
-        :param delay: delay between sending each row
+        :param delay: delay between sending each row of the image
         :type delay: float
         :param resample: image resampling mode (Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.ANTIALIAS)
         """
@@ -718,6 +735,19 @@ class Printer:
         
         imgbytes = img.tobytes()
         self.printImageBytes(imgbytes)
+    
+    def printQR(self, text, delay=0.01, resample=Image.NEAREST):
+        """
+        Generates QR code from specified string and prints it out.
+        
+        :param text: Text for qr code
+        :tapy text: str
+        :param delay: delay between sending each row of the image
+        :type delay: float
+        :param resample: image resampling mode (Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.ANTIALIAS)
+        """
+        
+        self.printImage(qrcode.make(text, border=0), delay, resample)
     
     def printRowBytesIterator(self, rowiterator, delay=0.25):
         """

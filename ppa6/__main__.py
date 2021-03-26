@@ -26,6 +26,7 @@ def main():
     group.add_argument('-t', '--text', help='ASCII text that should be printed. Add a line break at the end of the string to avoid it being cut. String can be empty, so just page break will be printed', type=str)
     group.add_argument('-s', '--stream', help='Reads an input from stdin and prints as ASCII text', action='store_true')
     group.add_argument('-i', '--image', help='Path to the image that should be printed', type=str)
+    group.add_argument('-q', '--qr', help='String for QR code print', type=str)
     group.add_argument('-e', '--introduce', help='Ask the printer to introduce himself', action='store_true')
 
     args = parser.parse_args()
@@ -47,7 +48,7 @@ def main():
         printer.disconnect()
         sys.exit(0)
         
-    elif 'stream' in args and args.stream is not None:
+    elif 'stream' in args and args.stream:
         
         if 'concentration' in args:
             printer.setConcentration(args.concentration)
@@ -102,6 +103,20 @@ def main():
             print(f'Failed to open image {args.image}')
         
         printer.printImage(img, resample=Image.ANTIALIAS)
+        
+        if 'breaksize' in args and args.breaksize > 0:
+            printer.printBreak(args.breaksize)
+        
+        sys.exit(0)
+        
+    elif 'qr' in args and args.qr is not None:
+        
+        if 'concentration' in args:
+            printer.setConcentration(args.concentration)
+        
+        printer.reset()
+        
+        printer.printQR(args.qr, resample=Image.ANTIALIAS)
         
         if 'breaksize' in args and args.breaksize > 0:
             printer.printBreak(args.breaksize)
