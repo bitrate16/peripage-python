@@ -156,7 +156,6 @@ View this [photos](https://github.com/bitrate16/ppa6-python/blob/main/disassembl
 
 ## TODO
 
-* Implement CLI QR code printing
 * Implement overheat protection
 * Implement cover open handler
 * Tweak wait timings to precisely match the printing speed
