@@ -58,12 +58,23 @@ cd pybluez
 pip install . --user
 ```
 
+On raspberry pi it may require to install additional libraries
+```
+sudo apt install libbluetooth-dev libopenjp2-7 libtiff5
+```
+
+And in some cases you will have to restart the bluetooth adapter and service on raspberry pi when it fails to connect or device is busy
+```
+sudo systemctl restart bluetooth
+sudo hciconfig hci0 reset
+```
+
 ## Identify printer Bluetooth MAC address
 
 **On linux:**
 
 ```
-user@name:~$ hcitool
+user@name:~$ hcitool scan
 Scanning ..
 00:15:83:15:bc:5f    PeriPage+BC5F
 ```
