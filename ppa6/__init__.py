@@ -5,7 +5,7 @@
 # Copyright (c) 2021 bitrate16
 
 __title__ = 'Peripage A6/A6+ buetooth printing utility'
-__version__ = '0.3'
+__version__ = '0.4'
 __author__ = 'bitrate16'
 __license__ = 'MIT'
 __copyright__ = 'Copyright (c) 2021 bitrate16'
@@ -90,8 +90,8 @@ class Printer:
         """
         
         self.sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        self.sock.settimeout(self.timeout)
         self.sock.connect((self.mac, 1))
+        self.sock.settimeout(self.timeout)
     
     def reconnect(self):
         """
@@ -109,8 +109,8 @@ class Printer:
             del self.sock
         
         self.sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        self.sock.settimeout(self.timeout)
         self.sock.connect((self.mac, 1))
+        self.sock.settimeout(self.timeout)
     
     def disconnect(self):
         """
