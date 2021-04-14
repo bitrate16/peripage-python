@@ -157,6 +157,13 @@ ppa6 -m 00:15:83:15:bc:5f -p A6p -b 100 -t "HONK" -n
 ```
 Newline is required to fush the internal printer buffer and force it to print all text without cutting
 
+### Suggestions
+* Don't forget about concentration, this can make print brighter and better visible.
+* Split long images into multiple print requests with cooldown time for printer (printer may overheat during a long print and will stop printing for a while. This will result in partial print loss because the internal buffer is about 250px height). For example, when you print [looooooooooooooooooooooooooooooongcat.jpg](http://lurkmore.so/images/9/91/Loooooooooooooooooooooooooooooooooooooooooongcat.JPG), split it into at least 20 pieces with 1-2 minutes delay because you will definetly loose something without cooling. Printer gets hot very fast. Yes, it was the first that i've printed.
+* Be carefull when printing lots of black or using max concentration, as i said, printer heats up very fast.
+* The picture printed at maximum concentration has the longest shelf life.
+* Be aware of cats, they have paws 🐾
+
 ## Code example
 
 View this [python notebook](https://github.com/bitrate16/ppa6-python/blob/main/notebooks/ppa6-tutorial.ipynb) for tutorial
