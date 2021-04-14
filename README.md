@@ -170,7 +170,7 @@ View this [python notebook](https://github.com/bitrate16/ppa6-python/blob/main/n
 
 ## Printer disassembly
 
-View this [photos](https://github.com/bitrate16/ppa6-python/blob/main/disassembly)
+[Disassembly for A6+](https://imgur.com/a/6LLwuaD)
 
 ## TODO
 
