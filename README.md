@@ -167,6 +167,7 @@ View this [photos](https://github.com/bitrate16/ppa6-python/blob/main/disassembl
 
 ## TODO
 
+* Python 2.7 support
 * Implement overheat protection
 * Implement cover open handler
 * Tweak wait timings to precisely match the printing speed
