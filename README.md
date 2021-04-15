@@ -174,6 +174,8 @@ View this [python notebook](https://github.com/bitrate16/ppa6-python/blob/main/n
 
 ## TODO
 
+* Fix page sometimes get cutted off for some rows
+* Fix timeouts
 * Python 2.7 support
 * Implement overheat protection
 * Implement cover open handler
