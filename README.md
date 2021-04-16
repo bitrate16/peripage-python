@@ -162,6 +162,7 @@ Newline is required to fush the internal printer buffer and force it to print al
 * Split long images into multiple print requests with cooldown time for printer (printer may overheat during a long print and will stop printing for a while. This will result in partial print loss because the internal buffer is about 250px height). For example, when you print [looooooooooooooooooooooooooooooongcat.jpg](http://lurkmore.so/images/9/91/Loooooooooooooooooooooooooooooooooooooooooongcat.JPG), split it into at least 20 pieces with 1-2 minutes delay because you will definetly loose something without cooling. Printer gets hot very fast. Yes, it was the first that i've printed.
 * Be carefull when printing lots of black or using max concentration, as i said, printer heats up very fast.
 * The picture printed at maximum concentration has the longest shelf life.
+* Turn printer off then long press the power button till it becomes orange. Release the button and look at the another useless feature.
 * Be aware of cats, they have paws 🐾
 
 ## Code example
