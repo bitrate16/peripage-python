@@ -184,6 +184,8 @@ View this [python notebook](https://github.com/bitrate16/ppa6-python/blob/main/n
 * Implement printer renaming
 * Implement printing stop operation
 * Reverse-engineer USB driver and add support for it
+* **FIX:** Print randomly gets cropped (some images getting cropped)
+* **FIX:** 1 type conversion is low quality
 
 ## Credits
 
