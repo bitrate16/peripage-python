@@ -19,7 +19,7 @@ Essentially, the script takes an input images, scales it to the printers native 
 * Printing Images using PIL library
 * Printing raw bytes representing image in binary (black/white) form
 * Printing a page break of desired size (in pixels)
-* Printing using generator/iterator which returns image row by row in borm of bytes or PIL Images
+* Printing using generator/iterator which returns image row by row in form of bytes or PIL Images
 * Requesting printer details (Serial Number, Name, Battery Level, Hardware Info and an option the meaning of which i don't know)
 * Configuring print concentration (light, gray, black)
 * Configuring printer poweroff timeout
