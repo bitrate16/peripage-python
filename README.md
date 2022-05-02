@@ -160,7 +160,7 @@ Newline is required to fush the internal printer buffer and force it to print al
 ### Print Service example
 
 **Print 50 text tasks on A6+**
-```
+```python
 import ppa6
 import print_service
 
