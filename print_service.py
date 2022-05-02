@@ -65,7 +65,7 @@ class PrintService:
 	event_interval.
 	
 	If printer disconnects, this service will automatically reconnect it after 
-	event_interval and print in the same time slot. If reconenct attempts fail, 
+	event_interval and print in the same time slot. If reconnect attempts fail, 
 	it will wait given offline_interval until next connection attempt.
 	
 	If ping interval is over, printer will be pinged to return battery level and 
@@ -82,7 +82,7 @@ class PrintService:
 		# Last printer ping timestamp, seconds
 		self.last_ping_timestamp = 0
 		
-		# Interval to wait after printer cconenction established
+		# Interval to wait after printer cconnection established
 		self.startup_interval = startup_interval
 		
 		# Time between reconnect attempts
@@ -103,7 +103,7 @@ class PrintService:
 		# Indicate service failture
 		self.service_failture = True
 		
-	def start(self, printer_mac: str, printer_type: ppa6.PrinterType, timeout: float = 1.0):
+	def start(self, printer_mac: str, printer_type: ppa6.PrinterType, timeout: float = 1.0, concentration: int = 1):
 		"""
 		Perform startup oof the service without check for previous instance running.
 		"""
@@ -144,16 +144,16 @@ class PrintService:
 							time.sleep(self.guard_ping_interval)
 						
 						self.events[-1](self.printer)
-						self.events.pop(0)
+						self.events.pop()
 					
 					# Return on success
 					return
 					
 				except:
-					# Connection error, reinitialize conenction
+					# Connection error, reinitialize connection
 					self.service_failture = True
 					
-					# Wait for offline_interval before reconencts
+					# Wait for offline_interval before reconnects
 					if not initial_failture:
 						time.sleep(self.offline_interval)
 					initial_failture = False
@@ -169,6 +169,7 @@ class PrintService:
 					try:
 						self.printer.connect()
 						self.printer.reset()
+						self.printer.setConcentration(self.concentration)
 						
 						time.sleep(self.startup_interval)
 						
@@ -177,6 +178,7 @@ class PrintService:
 					except:
 						pass
 		
+		self.concentration = concentration
 		self.printer = ppa6.Printer(printer_mac, printer_type, timeout)
 		self.last_ping_timestamp = time.time()
 		self.events = []
@@ -225,9 +227,23 @@ class PrintService:
 			if flush:
 				printer.flushASCII()
 		
-		
 		try:
 			self.events.append(wrap_print)
 			return True
 		except:
 			return False
+	
+	def clear_tasks(self):
+		"""
+		Remove all tasks from queue
+		"""
+		
+		if self.events:
+			self.events.clear()
+	
+	def get_task_count(self):
+		"""
+		Returns rest task count
+		"""
+		
+		return len(self.events) if self.events else 0 
