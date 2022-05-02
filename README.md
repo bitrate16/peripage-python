@@ -157,6 +157,25 @@ ppa6 -m 00:15:83:15:bc:5f -p A6p -b 100 -t "HONK" -n
 ```
 Newline is required to fush the internal printer buffer and force it to print all text without cutting
 
+### Print Service example
+
+**Print 50 text tasks on A6+**
+```
+import ppa6
+import print_service
+
+# Ping battery every 60 seconds
+# Send task every 5 seconds
+# Try to reconnect after waiting 5 seconds
+# Wait 1 second before send after connecting/reconnecting to printer
+# Print only after pinging printer and waiting for 1 second
+service = print_service.PrintService(60, 5, 5, 1, 1)
+service.start('00:15:83:15:bc:5f', ppa6.PrinterType.A6p)
+for i in range(50):
+	service.add_print_ascii(f'number {i}', flush=True)
+```
+Newline is required to fush the internal printer buffer and force it to print all text without cutting
+
 ### Suggestions
 * Don't forget about concentration, this can make print brighter and better visible.
 * Split long images into multiple print requests with cooldown time for printer (printer may overheat during a long print and will stop printing for a while. This will result in partial print loss because the internal buffer is about 250px height). For example, when you print [looooooooooooooooooooooooooooooongcat.jpg](http://lurkmore.so/images/9/91/Loooooooooooooooooooooooooooooooooooooooooongcat.JPG), split it into at least 20 pieces with 1-2 minutes delay because you will definetly loose something without cooling. Printer gets hot very fast. Yes, it was the first that i've printed.
