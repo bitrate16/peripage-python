@@ -137,10 +137,11 @@ class PrintService:
 					# Task will be deleted only after correct execution without exceptions
 					if len(self.events):
 						
-						str(self.printer.getDeviceBattery())
-						self.last_ping_timestamp = time.time()
-						
-						time.sleep(self.guard_ping_interval)
+						if self.guard_ping_interval is not None:
+							str(self.printer.getDeviceBattery())
+							self.last_ping_timestamp = time.time()
+							
+							time.sleep(self.guard_ping_interval)
 						
 						self.events[-1](self.printer)
 						self.events.pop(0)
