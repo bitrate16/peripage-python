@@ -1,0 +1,61 @@
+# print-server
+
+Simple utility for creating standalone print server for peripage A6/A6+ thermal printer
+
+# Configure
+
+Edit config in `__main__.py`
+```python
+# Config
+PRINTER_MODEL = ppa6.PrinterType.A6p
+PRINTER_MAC   = '00:15:83:15:bc:5f'
+SERVER_PORT   = 11001
+```
+
+Edit server properties in `scripts/print_ascii_clipboard.py`
+```python
+SERVER_ADDR   = '192.168.1.101:11001'
+BREAK         = 1 # Enable/disable
+CONCENTRATION = 2 # Value (0-2)
+```
+
+Edit server properties in `scripts/print_image_drag_and_drop.py`
+```python
+SERVER_ADDR   = '192.168.1.101:11001'
+BREAK         = 1 # Enable/disable
+CONCENTRATION = 2 # Value (0-2)
+```
+
+# Requirements
+
+Libraries:
+```bash
+$ sudo apt install bluetooth bluez libbluetooth-dev libopenjp2-7
+```
+
+Packages:
+```
+$ pip3 install Pillow aiohttp aiohttp_middlewares ppa6 python-dateutil
+```
+
+# Usage
+
+### ASCII text print
+
+Tabs automatically converted to 4 spaces
+
+1. Copy text to clipboard
+2. Run `print_ascii_clipboard.py` or `print_ascii_clipboard.bat`
+
+### Image print
+
+Supported: jpeg, png
+
+1. Drag and drop image file on `print_image_drag_and_drop.bat.py` or `print_image_drag_and_drop.bat.bat`
+
+# Run
+
+Run with:
+```
+python3 -m print-server
+```
