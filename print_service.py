@@ -143,8 +143,8 @@ class PrintService:
 							
 							time.sleep(self.guard_ping_interval)
 						
-						self.events[-1](self.printer)
-						self.events.pop()
+						self.events[0](self.printer)
+						self.events.pop(0)
 					
 					# Return on success
 					return
