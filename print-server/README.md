@@ -10,6 +10,8 @@ Edit config in `__main__.py`
 PRINTER_MODEL = ppa6.PrinterType.A6p
 PRINTER_MAC   = '00:15:83:15:bc:5f'
 SERVER_PORT   = 11001
+BREAK_SIZE    = 100
+TIMEZONE      = 'Europe/Moscow'
 ```
 
 Edit server properties in `scripts/print_ascii_clipboard.py`
@@ -47,11 +49,31 @@ Tabs automatically converted to 4 spaces
 1. Copy text to clipboard
 2. Run `print_ascii_clipboard.py` or `print_ascii_clipboard.bat`
 
+Endpoint:
+```
+Set print_date to 1 to enable print leading date
+Set print_break to 1 to enable print trailing break
+Set request body to ASCII text to print
+
+POST /print_ascii?print_date=1&print_break=1
+body: "Hello World!"
+```
+
 ### Image print
 
 Supported: jpeg, png
 
 1. Drag and drop image file on `print_image_drag_and_drop.bat.py` or `print_image_drag_and_drop.bat.bat`
+
+Endpoint:
+```
+Set print_date to 1 to enable print leading date
+Set print_break to 1 to enable print trailing break
+Set request body to image file, supported png and jpg
+
+POST /print_image?print_break=1
+body: { image: binary image file }
+```
 
 # Run
 

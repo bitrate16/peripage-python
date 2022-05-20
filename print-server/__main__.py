@@ -27,6 +27,8 @@ from . import print_service
 PRINTER_MODEL = ppa6.PrinterType.A6p
 PRINTER_MAC   = '00:15:83:15:bc:5f'
 SERVER_PORT   = 11001
+BREAK_SIZE    = 100
+TIMEZONE      = 'Europe/Moscow'
 
 
 # Globals
@@ -35,13 +37,15 @@ app: aiohttp.web.Application = None
 
 
 # Utils
-def print_break(break_size: int):
+def print_break():
 	"""
 	Simple page break of given size
 	"""
 	
 	def wrap_print_break(p: ppa6.Printer):
-		p.printBreak(break_size)
+		p.printBreak(BREAK_SIZE)
+		date = datetime.now(tz.gettz(TIMEZONE)).strftime("%d.%m.%Y %H:%M:%S.%f")
+		print(date, 'done', 'BREAK')
 	
 	service.add_print_handler(wrap_print_break)
 
@@ -70,7 +74,7 @@ async def post_print_ascii(request: aiohttp.web.Request):
 			'message': 'empty ascii string'
 		})
 	
-	date = datetime.now(tz.gettz('Europe/Moscow')).strftime("%d.%m.%Y %H:%M:%S.%f")
+	date = datetime.now(tz.gettz(TIMEZONE)).strftime("%d.%m.%Y %H:%M:%S.%f")
 	
 	# Log
 	print(date, '--->', 'ASCII')
@@ -81,9 +85,6 @@ async def post_print_ascii(request: aiohttp.web.Request):
 	if (request.query.get('print_date', None) == 'true') or (request.query.get('print_date', None) == '1'):
 		print_text = f'{date}\n{print_text}'
 	
-	if (request.query.get('print_break', None) == 'true') or (request.query.get('print_break', None) == '1'):
-		print_text = f'{print_text}\n\n'
-		
 	# Get concentration
 	try:
 		concenttration = min(2, max(0, int(request.query.get('print_concentration', 0))))
@@ -98,6 +99,9 @@ async def post_print_ascii(request: aiohttp.web.Request):
 		print(date, 'done', 'ASCII')
 		
 	service.add_print_handler(wrap_print_ascii)
+	
+	if (request.query.get('print_break', None) == 'true') or (request.query.get('print_break', None) == '1'):
+		print_break()
 	
 	return aiohttp.web.json_response({
 		'status': 'result',
@@ -128,7 +132,7 @@ async def post_print_image(request: aiohttp.web.Request):
 		img = PIL.Image.open(buf)
 		
 		# Log
-		date = datetime.now(tz.gettz('Europe/Moscow')).strftime("%d.%m.%Y %H:%M:%S.%f")
+		date = datetime.now(tz.gettz(TIMEZONE)).strftime("%d.%m.%Y %H:%M:%S.%f")
 		print(date, '--->', 'Image')
 		
 		if not img:
@@ -153,7 +157,7 @@ async def post_print_image(request: aiohttp.web.Request):
 		
 		# Add page break
 		if (request.query.get('print_break', None) == 'true') or (request.query.get('print_break', None) == '1'):
-			print_break(50)
+			print_break()
 		
 		# Return size of payload
 		return aiohttp.web.json_response({
