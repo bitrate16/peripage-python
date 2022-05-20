@@ -7,6 +7,7 @@ BREAK         = 1 # Enable/disable
 CONCENTRATION = 2 # Value (0-2)
 
 s = pyperclip.paste().strip().replace('\t', '    ')
+s = ''.join([i for i in s if (31 < ord(i) or ord(i) == 10) and ord(i) < 127])
 print(s)
 
 r = requests.post(
