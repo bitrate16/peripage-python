@@ -16,7 +16,6 @@ import ppa6
 import atexit
 import PIL
 import sys
-import traceback
 
 from dateutil import tz
 from datetime import datetime
@@ -29,6 +28,7 @@ PRINTER_MAC   = '00:15:83:15:bc:5f'
 SERVER_PORT   = 11001
 BREAK_SIZE    = 100
 TIMEZONE      = 'Europe/Moscow'
+SECRET_KEY    = '1234567890'
 
 
 # Globals
@@ -53,6 +53,12 @@ def print_break():
 # Handlers
 
 async def post_print_ascii(request: aiohttp.web.Request):
+	
+	if request.query.get('secret', None) != SECRET_KEY:
+		return aiohttp.web.json_response({
+			'status': 'error',
+			'message': 'missing secret key'
+		})
 	
 	# Get request payload
 	if not request.body_exists:
@@ -109,6 +115,12 @@ async def post_print_ascii(request: aiohttp.web.Request):
 	})
 
 async def post_print_image(request: aiohttp.web.Request):
+	
+	if request.query.get('secret', None) != SECRET_KEY:
+		return aiohttp.web.json_response({
+			'status': 'error',
+			'message': 'missing secret key'
+		})
 	
 	# Get request payload
 	if not request.body_exists:

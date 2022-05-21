@@ -12,6 +12,7 @@ PRINTER_MAC   = '00:15:83:15:bc:5f'
 SERVER_PORT   = 11001
 BREAK_SIZE    = 100
 TIMEZONE      = 'Europe/Moscow'
+SECRET_KEY    = '1234567890'
 ```
 
 Edit server properties in `scripts/print_ascii_clipboard.py`
@@ -19,6 +20,7 @@ Edit server properties in `scripts/print_ascii_clipboard.py`
 SERVER_ADDR   = '192.168.1.101:11001'
 BREAK         = 1 # Enable/disable
 CONCENTRATION = 2 # Value (0-2)
+SECRET_KEY    = '1234567890'
 ```
 
 Edit server properties in `scripts/print_image_drag_and_drop.py`
@@ -26,6 +28,7 @@ Edit server properties in `scripts/print_image_drag_and_drop.py`
 SERVER_ADDR   = '192.168.1.101:11001'
 BREAK         = 1 # Enable/disable
 CONCENTRATION = 2 # Value (0-2)
+SECRET_KEY    = '1234567890'
 ```
 
 # Requirements
