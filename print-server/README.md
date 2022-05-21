@@ -13,6 +13,7 @@ SERVER_PORT   = 11001
 BREAK_SIZE    = 100
 TIMEZONE      = 'Europe/Moscow'
 SECRET_KEY    = '1234567890'
+RECEIVE_DIRECTORY = 'received'
 ```
 
 Edit server properties in `scripts/print_ascii_clipboard.py`

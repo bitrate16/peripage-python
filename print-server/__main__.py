@@ -10,12 +10,14 @@
 
 import aiohttp
 import io
+import os
 import aiohttp.web
 import aiohttp_middlewares
 import ppa6
 import atexit
 import PIL
 import sys
+import time
 
 from dateutil import tz
 from datetime import datetime
@@ -29,6 +31,7 @@ SERVER_PORT   = 11001
 BREAK_SIZE    = 100
 TIMEZONE      = 'Europe/Moscow'
 SECRET_KEY    = '1234567890'
+RECEIVE_DIRECTORY = 'received'
 
 
 # Globals
@@ -37,15 +40,14 @@ app: aiohttp.web.Application = None
 
 
 # Utils
-def print_break():
+def print_break(timestamp, date, ip, proxy_ip):
 	"""
 	Simple page break of given size
 	"""
 	
 	def wrap_print_break(p: ppa6.Printer):
 		p.printBreak(BREAK_SIZE)
-		date = datetime.now(tz.gettz(TIMEZONE)).strftime("%d.%m.%Y %H:%M:%S.%f")
-		print(date, 'done', 'BREAK')
+		print(ip, '/', proxy_ip, '#', date, timestamp, 'done', 'BREAK')
 	
 	service.add_print_handler(wrap_print_break)
 
@@ -80,11 +82,17 @@ async def post_print_ascii(request: aiohttp.web.Request):
 			'message': 'empty ascii string'
 		})
 	
-	date = datetime.now(tz.gettz(TIMEZONE)).strftime("%d.%m.%Y %H:%M:%S.%f")
+	date = datetime.now(tz.gettz(TIMEZONE))
+	timestamp = round(date.timestamp() * 1000)
+	date = date.strftime("%d.%m.%Y %H:%M:%S.%f")
 	
 	# Log
-	print(date, '--->', 'ASCII')
-	# print(ascii_text)
+	print(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, '--->', 'ASCII')
+	
+	# Save data
+	if RECEIVE_DIRECTORY is not None:
+		with open(f'{RECEIVE_DIRECTORY}/{timestamp}_ascii.txt', 'w') as f:
+			f.write(ascii_text)
 	
 	# Decorate string
 	print_text = ascii_text
@@ -102,12 +110,12 @@ async def post_print_ascii(request: aiohttp.web.Request):
 		p.setConcentration(concenttration)
 		p.printASCII(ascii_text)
 		p.flushASCII()
-		print(date, 'done', 'ASCII')
+		print(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, 'done', 'ASCII')
 		
 	service.add_print_handler(wrap_print_ascii)
 	
 	if (request.query.get('print_break', None) == 'true') or (request.query.get('print_break', None) == '1'):
-		print_break()
+		print_break(timestamp, date, request.remote, request.headers.get('X-Forwarded-For', 'None'))
 	
 	return aiohttp.web.json_response({
 		'status': 'result',
@@ -142,16 +150,23 @@ async def post_print_image(request: aiohttp.web.Request):
 		img_content = image.file.read()
 		buf = io.BytesIO(img_content)
 		img = PIL.Image.open(buf)
-		
-		# Log
-		date = datetime.now(tz.gettz(TIMEZONE)).strftime("%d.%m.%Y %H:%M:%S.%f")
-		print(date, '--->', 'Image')
+	
+		date = datetime.now(tz.gettz(TIMEZONE))
+		timestamp = round(date.timestamp() * 1000)
+		date = date.strftime("%d.%m.%Y %H:%M:%S.%f")
 		
 		if not img:
 			return aiohttp.web.json_response({
 				'status': 'error',
 				'message': 'invalid request image'
 			})
+		
+		# Log
+		print(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, '--->', 'Image')
+	
+		# Save data
+		if RECEIVE_DIRECTORY is not None:
+			img.save(f'{RECEIVE_DIRECTORY}/{timestamp}_image.png', 'PNG')
 		
 		# Get concentration
 		try:
@@ -163,13 +178,13 @@ async def post_print_image(request: aiohttp.web.Request):
 		def wrap_print_image(p: ppa6.Printer):
 			p.setConcentration(concenttration)
 			p.printImage(img)
-			print(date, 'done', 'Image')
+			print(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, 'done', 'Image')
 		
 		service.add_print_handler(wrap_print_image)
 		
 		# Add page break
 		if (request.query.get('print_break', None) == 'true') or (request.query.get('print_break', None) == '1'):
-			print_break()
+			print_break(timestamp, date, request.remote, request.headers.get('X-Forwarded-For', 'None'))
 		
 		# Return size of payload
 		return aiohttp.web.json_response({
@@ -187,6 +202,10 @@ async def post_print_image(request: aiohttp.web.Request):
 
 
 def main():
+	
+	# Create output directory
+	if RECEIVE_DIRECTORY is not None:
+		os.makedirs(RECEIVE_DIRECTORY, exist_ok=True)
 	
 	# Init app
 	global app
