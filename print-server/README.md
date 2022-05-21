@@ -31,6 +31,14 @@ CONCENTRATION = 2 # Value (0-2)
 SECRET_KEY    = '1234567890'
 ```
 
+Edit server properties in `scripts/print_image_clipboard.py`
+```python
+SERVER_ADDR   = '192.168.1.101:11001'
+BREAK         = 1 # Enable/disable
+CONCENTRATION = 2 # Value (0-2)
+SECRET_KEY    = '1234567890'
+```
+
 # Requirements
 
 Libraries:
@@ -66,7 +74,7 @@ body: "Hello World!"
 
 Supported: jpeg, png
 
-1. Drag and drop image file on `print_image_drag_and_drop.bat.py` or `print_image_drag_and_drop.bat.bat`
+1. Drag and drop image file on `print_image_drag_and_drop.bat.py` or `print_image_drag_and_drop.bat`
 
 Endpoint:
 ```
@@ -77,6 +85,13 @@ Set request body to image file, supported png and jpg
 POST /print_image?print_break=1
 body: { image: binary image file }
 ```
+
+### Image print from clipboard
+
+Supported: jpeg, png
+
+1. Copy image from browser/editor/etc and run `print_image_clipboard.py` or `print_image_clipboard.bat`
+Endpoint: Same as above
 
 # Run
 
