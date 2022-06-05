@@ -6,6 +6,7 @@
 
 import time
 import threading
+import PIL
 
 import ppa6
 
@@ -212,26 +213,144 @@ class PrintService:
 		except:
 			return False
 
-	def add_print_ascii(self, ascii_text: str, flush: bool = False):
+	def add_print_ascii(self, ascii_text: str, concentration: int=None, break_size: int=0, /, flush: bool = False):
 		"""
-		Adds simple print event to queue, additionally flushes output buffer.
+		Adds simple print ASCII event to queue, additionally flushes output 
+		buffer.
+		
+		`ascii_text` defines the input text to be printed.
+		
+		`concentration` defines the concentration value from range [0, 1, 2]. 
+		Set to None to ignore.
+		
+		`break_size` defines the break size to print after the text. Refers to 
+		`ppa6.Printer.printBreak()` for value limitations. Set to None or 0 to 
+		ignore.
+		
+		`flush` allows force flushing ASCII buffer. Refers to 
+		`ppa6.Printer.flushASCII()`.
+		
 		
 		Example:
 		```
-		printer_task.add_print_ascii('hello', True)
+		printer_task.add_print_ascii('hello', concentration=2, break_size=100, flush=True)
 		```
 		"""
 		
 		def wrap_print(printer: ppa6.Printer):
+			if concentration is not None:
+				printer.setConcentration(concentration)
+			
 			printer.printASCII(ascii_text)
+			
 			if flush:
 				printer.flushASCII()
+			
+			if break_size is not None and break_size > 0:
+				printer.printBreak(break_size)
 		
 		try:
 			self.events.append(wrap_print)
 			return True
 		except:
 			return False
+	
+	def add_print_image(self, image: PIL.Image, concentration: int=None, break_size: int=0):
+		"""
+		Adds simple print Image event to queue.
+		
+		`image` defines the input image to be printed.
+		
+		`concentration` defines the concentration value from range [0, 1, 2]. 
+		Set to None to ignore.
+		
+		`break_size` defines the break size to print after the image. Refers to 
+		`ppa6.Printer.printBreak()` for value limitations. Set to None or 0 to 
+		ignore.
+		
+		
+		Example:
+		```
+		printer_task.add_print_iamge(PIL.open('image.png'), concentration=2, break_size=100, flush=True)
+		```
+		"""
+		
+		def wrap_print(printer: ppa6.Printer):
+			if concentration is not None:
+				printer.setConcentration(concentration)
+			
+			printer.printImage(image)
+			
+			if break_size is not None and break_size > 0:
+				printer.printBreak(break_size)
+		
+		try:
+			self.events.append(wrap_print)
+			return True
+		except:
+			return False
+	
+	def add_print_break(self, break_size: int=0):
+		"""
+		Adds simple print break event to queue.
+		
+		`break_size` defines the break size to print after the image. Refers to 
+		`ppa6.Printer.printBreak()` for value limitations. Set to None or 0 to 
+		ignore.
+		
+		
+		Example:
+		```
+		printer_task.add_print_break(200)
+		```
+		"""
+		
+		if break_size is not None and break_size > 0:
+			try:
+				self.events.append(lambda p: p.printBreak(break_size))
+				return True
+			except:
+				return False
+		return False
+	
+	def add_print_flush_ascii(self):
+		"""
+		Adds simple flush ASCII buffer event to queue.
+		
+		
+		Example:
+		```
+		printer_task.add_print_flush_ascii(200)
+		```
+		"""
+		
+		try:
+			self.events.append(lambda p: p.flushASCII())
+			return True
+		except:
+			return False
+	
+	def add_print_concentration(self, concentration: int=None):
+		"""
+		Adds concentration change event to queue.
+		
+		`concentration` defines the concentration value from range [0, 1, 2]. 
+		Set to None to ignore.
+		
+		
+		Example:
+		```
+		printer_task.add_print_concentration(1)
+		```
+		"""
+		
+		if concentration is not None:	
+			try:
+				self.events.append(lambda p: p.setConcentration(concentration))
+				return True
+			except:
+				return False
+		return False
 	
 	def clear_tasks(self):
 		"""
