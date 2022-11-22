@@ -32,6 +32,7 @@ BREAK_SIZE    = 100
 TIMEZONE      = 'Europe/Moscow'
 SECRET_KEY    = '1234567890'
 RECEIVE_DIRECTORY = 'received'
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 
 # Globals
@@ -40,6 +41,14 @@ app: aiohttp.web.Application = None
 
 
 # Utils
+def log(*args):
+	print(*args)
+	for a in args:
+		file.write(str(a))
+		file.write(' ')
+	file.write('\n')
+	file.flush()
+
 def print_break(timestamp, date, ip, proxy_ip):
 	"""
 	Simple page break of given size
@@ -47,7 +56,7 @@ def print_break(timestamp, date, ip, proxy_ip):
 	
 	def wrap_print_break(p: ppa6.Printer):
 		p.printBreak(BREAK_SIZE)
-		print(ip, '/', proxy_ip, '#', date, timestamp, 'done', 'BREAK')
+		log(ip, '/', proxy_ip, '#', date, timestamp, 'done', 'BREAK')
 	
 	service.add_print_handler(wrap_print_break)
 
@@ -87,7 +96,7 @@ async def post_print_ascii(request: aiohttp.web.Request):
 	date = date.strftime("%d.%m.%Y %H:%M:%S.%f")
 	
 	# Log
-	print(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, '--->', 'ASCII')
+	log(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, '--->', 'ASCII')
 	
 	# Save data
 	if RECEIVE_DIRECTORY is not None:
@@ -110,7 +119,7 @@ async def post_print_ascii(request: aiohttp.web.Request):
 		p.setConcentration(concenttration)
 		p.printASCII(ascii_text)
 		p.flushASCII()
-		print(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, 'done', 'ASCII')
+		log(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, 'done', 'ASCII')
 		
 	service.add_print_handler(wrap_print_ascii)
 	
@@ -162,7 +171,7 @@ async def post_print_image(request: aiohttp.web.Request):
 			})
 		
 		# Log
-		print(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, '--->', 'Image')
+		log(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, '--->', 'Image')
 	
 		# Save data
 		if RECEIVE_DIRECTORY is not None:
@@ -178,7 +187,7 @@ async def post_print_image(request: aiohttp.web.Request):
 		def wrap_print_image(p: ppa6.Printer):
 			p.setConcentration(concenttration)
 			p.printImage(img)
-			print(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, 'done', 'Image')
+			log(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, 'done', 'Image')
 		
 		service.add_print_handler(wrap_print_image)
 		
@@ -211,7 +220,7 @@ def main():
 	global app
 	app = aiohttp.web.Application(middlewares=[
 		aiohttp_middlewares.cors_middleware(allow_all=True),
-	])
+	], client_max_size=MAX_FILE_SIZE)
 	
 	# Init printing service
 	global service
