@@ -4,7 +4,7 @@
 # 
 # Copyright (c) 2021 bitrate16
 
-__title__ = 'Peripage A6/A6+ buetooth printing utility'
+__title__ = 'Peripage A6/A6+/A40 buetooth printing utility'
 __version__ = '0.5'
 __author__ = 'bitrate16'
 __license__ = 'MIT'
@@ -23,14 +23,15 @@ from enum import Enum
 class PrinterType(Enum):
     """
     Defines names for supported printer types.
-    Currently supported printers are: Peripage A6, Peripage A6+
+    Currently supported printers are: Peripage A6, Peripage A6+, Peripage A40
     """
     A6  = 6
     A6p = 7
+    A40 = 8
 
 class Printer:
     """
-    This class defines the Peripage A6 / A6+ interface utility.
+    This class defines the Peripage A6 / A6+ A40 interface utility.
     It contains methods wrapping requests with special control opcodes.
     By default instance of this class is constructed with timeout set 
     to 1s and printer type A6.
@@ -284,6 +285,8 @@ class Printer:
             return 48
         elif self.printerType == PrinterType.A6p:
             return 72
+        elif self.printerType == PrinterType.A40:
+            return 216 
         else:
             raise ValueError('Unsupported printer type')
     
@@ -299,6 +302,8 @@ class Printer:
             return 384
         elif self.printerType == PrinterType.A6p:
             return 576
+        elif self.printerType == PrinterType.A40:           
+            return 1728  
         else:
             raise ValueError('Unsupported printer type')
     
@@ -313,6 +318,8 @@ class Printer:
             return 32
         elif self.printerType == PrinterType.A6p:
             return 48
+        elif self.printerType == PrinterType.A40:
+            return 144
         else:
             raise ValueError('Unsupported printer type')
         
@@ -621,8 +628,10 @@ class Printer:
         # Notify printer about incomming $expectedLen bytes row
         if self.printerType == PrinterType.A6:
             self.tellPrinter(bytes.fromhex('1d76300030000100'))
-        else:
+        elif self.printerType == PrinterType.A6p:
             self.tellPrinter(bytes.fromhex('1d76300048000100'))
+        else:   
+            self.tellPrinter(bytes.fromhex('1d763000d8000100'))
         
         self.tellPrinter(rowbytes)
         
@@ -659,8 +668,11 @@ class Printer:
             # Notify printer about incomming $expectedLen bytes row
             if self.printerType == PrinterType.A6:
                 self.tellPrinter(bytes.fromhex(f'1d7630003000{heightHex}00'))
-            else:
+            elif self.printerType == PrinterType.A6p:
                 self.tellPrinter(bytes.fromhex(f'1d7630004800{heightHex}00'))
+            else:
+                self.tellPrinter(bytes.fromhex(f'1d763000d800{heightHex}00'))
+            
             
             for j in range(height):
                 rowbytes = imagebytes[i*0xff+j]
@@ -707,8 +719,11 @@ class Printer:
             # Notify printer about incomming $expectedLen bytes row
             if self.printerType == PrinterType.A6:
                 self.tellPrinter(bytes.fromhex(f'1d7630003000{heightHex}00'))
-            else:
+            elif self.printerType == PrinterType.A6p:
                 self.tellPrinter(bytes.fromhex(f'1d7630004800{heightHex}00'))
+            else:
+                self.tellPrinter(bytes.fromhex(f'1d763000d800{heightHex}00'))
+            
             
             for j in range(height):
                 self.tellPrinter(imagebytes[(i*0xff+j)*expectedLen:(i*0xff+(j+1))*expectedLen])
@@ -808,6 +823,8 @@ class Printer:
             self.tellPrinter(bytes.fromhex(f'1d7630003000{rowcountstr}'))
         elif self.printerType == PrinterType.A6p:
             self.tellPrinter(bytes.fromhex(f'1d7630004800{rowcountstr}'))
+        elif self.printerType == PrinterType.A40:
+            self.tellPrinter(bytes.fromhex(f'1d763000d800{rowcountstr}'))
         else:
             raise ValueError('Unsupported printer type')
         

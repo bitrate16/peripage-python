@@ -10,7 +10,7 @@ def main():
     from ppa6 import Printer, PrinterType
     from PIL import Image
 
-    parser = argparse.ArgumentParser(description='Print on a Peripage A6 / A6+ via bluetooth')
+    parser = argparse.ArgumentParser(description='Print on a Peripage A6 / A6+ / A40 via bluetooth')
     parser.add_argument('-m', '--mac', help='Bluetooth MAC address of the printer', required=True, type=str)
     parser.add_argument('-c', '--concentration', help='Concentration value for printing (0, 1, 2)', required=False, choices=[0, 1, 2], metavar='[0-2]', type=int, default=0)
     parser.add_argument('-b', '--break', dest='breaksize', help='Size of the break that should be inserted after the print (max 255)', required=False, choices=range(256), metavar='[0-255]', type=int, default=0)
