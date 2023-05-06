@@ -1,4 +1,7 @@
-Pillow>=8.2.0
-argparse==1.1
-PyBluez>=0.23
-qrcode>=6.1
+pdf2image==1.16.3
+Pillow==9.5.0
+PyBluez @ git+https://github.com/pybluez/pybluez@4d46ce14d9e888e3b0c65d5d3ba2a703f8e5e861
+pycryptodome==3.17
+pypng==0.20220715.0
+qrcode==7.4.2
+typing_extensions==4.5.0
