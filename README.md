@@ -1,15 +1,15 @@
 # ppa6-python
-### Python module for printing on Peripage A6 and A6+
+### Python module for printing on Peripage A6, A6+ and A40
 
 **This project is a continued development of the [original project](https://github.com/eliasweingaertner/peripage-A6-bluetooth) made by [Elias Weingärtner](https://github.com/eliasweingaertner). This module combined all results of reverse engineering of the Peripage A6/A6+ protocol in a python utility providing interface and CLI tool for printing on this thermal printer.**
 
 ## [The original introduction](https://github.com/eliasweingaertner/peripage-A6-bluetooth#introduction)
 
-The Peripage A6 F622 is an inexpensive portable thermal printer. It provides both Bluetooth and USB connectivity. Unlike most other thermo printers it **does not** seem to support ESC/POS or any other standardized printer control language. 
+The Peripage A6 F622 and the Peripage A40 are inexpensive portable thermal printers. They provides both Bluetooth and USB connectivity. Unlike most other thermo printers they **do not** seem to support ESC/POS or any other standardized printer control language. 
 
-So far, the Peripage A6 F622 can be only controlled using a proprietary app (iOS / Anndroid). There is also a driver for Windows with many limitations, most notably the need of defining a page size before printing; this is a huge limitation, as the Peripage prints on continuous form paper.
+So far, the Peripage A6 F622 and Peripage A40 can be only controlled using a proprietary app (iOS / Anndroid). There is also a driver for Windows with many limitations, most notably the need of defining a page size before printing; this is a huge limitation, as the Peripage prints on continuous form paper.
 
-The script provided here was built based on an analysis of captured Bluetooth traffic between the printer and an Android device. The Peripage A6 uses the serial profile (BTSPP) and RFCOMM. 
+The script provided here was built based on an analysis of captured Bluetooth traffic between the printer and an Android device. The Peripage A6 and Peripage A40 use the serial profile (BTSPP) and RFCOMM. 
 
 Essentially, the script takes an input images, scales it to the printers native X resolution of 384 pixels, and then sends it to the printer.
 
@@ -25,7 +25,7 @@ Essentially, the script takes an input images, scales it to the printers native 
 * Configuring printer poweroff timeout
 
 ## Prerequirements
-* Peripage A6/A6+ printer
+* Peripage A6/A6+/A40 printer
 * Python 3
 
 ## Installation
@@ -115,10 +115,10 @@ Install module and run
 ### Options
 
 ```
-usage: ppa6 [-h] -m MAC [-c [0-2]] [-b [0-255]] [-p {A6,A6p,A6+}] [-n]
+usage: ppa6 [-h] -m MAC [-c [0-2]] [-b [0-255]] [-p {A6,A6p,A6+,A40}] [-n]
                    (-t TEXT | -s | -i IMAGE | -q QR | -e)
 
-Print on a Peripage A6 / A6+ via bluetooth
+Print on a Peripage A6 / A6+ / A40 via bluetooth
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -128,8 +128,8 @@ optional arguments:
   -b [0-255], --break [0-255]
                         Size of the break that should be inserted after the
                         print (max 255)
-  -p {A6,A6p,A6+}, --printer {A6,A6p,A6+}
-                        Printer model name (A6 or A6+/A6p (both allowed))
+  -p {A6,A6p,A6+,A40}, --printer {A6,A6p,A6+,A40}
+                        Printer model name (A6 or A6+/A6p (both allowed) or A40)
   -n, --newline         Force printer to add newline at the end of the printed
                         text and flush the buffer
   -t TEXT, --text TEXT  ASCII text that should be printed. Add a line break at
