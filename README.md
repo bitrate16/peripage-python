@@ -3,13 +3,13 @@
 
 **This project is a continued development of the [original project](https://github.com/eliasweingaertner/peripage-A6-bluetooth) made by [Elias Weingärtner](https://github.com/eliasweingaertner). This module combined all results of reverse engineering of the Peripage A6/A6+ protocol in a python utility providing interface and CLI tool for printing on this thermal printer.**
 
-## [The original introduction](https://github.com/eliasweingaertner/peripage-A6-bluetooth#introduction)
+## [The original introduction for A6](https://github.com/eliasweingaertner/peripage-A6-bluetooth#introduction)
 
-The Peripage A6 F622 and the Peripage A40 are inexpensive portable thermal printers. They provides both Bluetooth and USB connectivity. Unlike most other thermo printers they **do not** seem to support ESC/POS or any other standardized printer control language. 
+The Peripage A6 F622 is an inexpensive portable thermal printer. It provides both Bluetooth and USB connectivity. Unlike most other thermo printers it **does not** seem to support ESC/POS or any other standardized printer control language.
 
-So far, the Peripage A6 F622 and Peripage A40 can be only controlled using a proprietary app (iOS / Anndroid). There is also a driver for Windows with many limitations, most notably the need of defining a page size before printing; this is a huge limitation, as the Peripage prints on continuous form paper.
+So far, the Peripage A6 F622 can be only controlled using a proprietary app (iOS / Anndroid). There is also a driver for Windows with many limitations, most notably the need of defining a page size before printing; this is a huge limitation, as the Peripage prints on continuous form paper.
 
-The script provided here was built based on an analysis of captured Bluetooth traffic between the printer and an Android device. The Peripage A6 and Peripage A40 use the serial profile (BTSPP) and RFCOMM. 
+The script provided here was built based on an analysis of captured Bluetooth traffic between the printer and an Android device. The Peripage A6 uses the serial profile (BTSPP) and RFCOMM.
 
 Essentially, the script takes an input images, scales it to the printers native X resolution of 384 pixels, and then sends it to the printer.
 
