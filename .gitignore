@@ -1,3 +1,4 @@
 # .gitignore
-venv/
-requirements.txt
+venv
+*.egg-info
+*/__pycache__/*
