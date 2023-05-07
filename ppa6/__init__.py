@@ -8,18 +8,20 @@ __title__ = 'Peripage buetooth printing utility'
 __version__ = '1.1'
 __author__ = 'bitrate16'
 __license__ = 'MIT'
-__copyright__ = 'Copyright (c) 2021-2023 bitrate16'
+__copyright__ = 'Copyright (c) MIT 2021-2023 bitrate16'
+
 
 import time
 import math
 import qrcode
 import typing
+import enum
 import socket
 import bluetooth
 
 import PIL.Image
 import PIL.ImageOps
-from enum import Enum
+
 
 class PrinterTypeSpecs:
     """
@@ -37,7 +39,7 @@ class PrinterTypeSpecs:
         self.row_width = row_width
         self.row_characters = row_characters
 
-class PrinterType(Enum):
+class PrinterType(enum.Enum):
     """
     Defines names for supported printer types.
     Currently supported printers are: Peripage A6, A6+, A40
@@ -259,7 +261,7 @@ class Printer:
         Example: Peripage A6+ returns `IP-300`.
         """
 
-        return self.askPrinter(b'10ff20f0')
+        return self.askPrinter(bytes.fromhex('10ff20f0'))
 
     def getDeviceName(self) -> bytes:
         """
@@ -272,7 +274,7 @@ class Printer:
         Example: Peripage A6+ returns `PeriPage+DF7A`.
         """
 
-        return self.askPrinter(b'10ff3011')
+        return self.askPrinter(bytes.fromhex('10ff3011'))
 
     def getDeviceSerialNumber(self) -> bytes:
         """
@@ -285,7 +287,7 @@ class Printer:
         Example: Peripage A6+ returns `A6491571121`.
         """
 
-        return self.askPrinter(b'10ff20f2')
+        return self.askPrinter(bytes.fromhex('10ff20f2'))
 
     def getDeviceFirmware(self) -> bytes:
         """
@@ -310,7 +312,7 @@ class Printer:
 
         Example: Peripage A6+ returns `\\x00@` (equals to `bytes[2] = { 0, 64 }`).
         """
-        return int(self.askPrinter(b'10ff50f1')[1])
+        return int(self.askPrinter(bytes.fromhex('10ff50f1'))[1])
 
     def getDeviceHardware(self) -> bytes:
         """
@@ -324,7 +326,7 @@ class Printer:
         `BR2141e-s` chip with a pile of ascii letters.
         """
 
-        return self.askPrinter(b'10ff3010')
+        return self.askPrinter(bytes.fromhex('10ff3010'))
 
     def getDeviceMAC(self) -> bytes:
         """
@@ -338,7 +340,7 @@ class Printer:
         (equals to `00:F5:73:25:AC:9F`).
         """
 
-        return self.askPrinter(b'10ff3012')
+        return self.askPrinter(bytes.fromhex('10ff3012'))
 
     def getDeviceFull(self) -> bytes:
         """
@@ -358,7 +360,7 @@ class Printer:
         in-printer ASCII buffer.
         """
 
-        return self.askPrinter(b'10ff70f100')
+        return self.askPrinter(bytes.fromhex('10ff70f100'))
 
     def getRowBytes(self) -> int:
         """
@@ -424,7 +426,7 @@ class Printer:
         `Printer.is_safe_ascii()` check.
         """
 
-        request = b'10ff20f4' + Printer.filter_ascii(serial_number).encode('ascii') + b'00'
+        request = bytes.fromhex('10ff20f4') + Printer.filter_ascii(serial_number).encode('ascii') + b'\0'
 
         if wait:
             return self.askPrinter(request)
@@ -447,7 +449,7 @@ class Printer:
         """
 
         timeout = max(min(0xfff0, timeout), 0x0001)
-        request = b'10ff12' + int.to_bytes(timeout, 2, 'big')
+        request = bytes.fromhex('10ff12') + int.to_bytes(timeout, 2, 'big')
 
         if wait:
             return self.askPrinter(request)
@@ -469,11 +471,11 @@ class Printer:
         """
 
         if concentration <= 0:
-            request = b'10ff100000'
+            request = bytes.fromhex('10ff100000')
         elif concentration == 1:
-            request = b'10ff100001'
+            request = bytes.fromhex('10ff100001')
         elif concentration >= 2:
-            request = b'10ff100002'
+            request = bytes.fromhex('10ff100002')
 
         if wait:
             return self.askPrinter(request)
@@ -489,7 +491,7 @@ class Printer:
         Request: `10fffe01+000000000000000000000000`.
         """
 
-        self.tellPrinter(b'10fffe01000000000000000000000000')
+        self.tellPrinter(bytes.fromhex('10fffe01000000000000000000000000'))
 
     def printBreak(self, size: int=0x40) -> None:
         """
@@ -653,144 +655,136 @@ class Printer:
             self.print_buffer = ''
             time.sleep(delay)
 
-    def printRow(self, rowbytes):
+    def printRow(self, rowbytes: bytes, delay: float=0.01) -> None:
         """
-        Send array of pixels represented with rowbytes bytes to the printer.
-        This operation invokes printer image / byte stream printing mode and prints out a single
-        row.
-        rowbytes expected to be bytes type with size matching the printer extected row size for
-        specified printer model (Refer to getRowBytes() for more information).
-        If amount of bytes exceeeds or under the required by this printer type, bytes array will
-        be cut or pad with zeros.
+        Send bytes representing a single image row in binary black/white mode.
+        If amount of bydes exceedes the `Printer.getRowBytes()` constant, input
+        is truncated. If size of input is under the `Printer.getRowBytes()`, it
+        will be padded with zeros.
 
-        :param rowbytes: bytes array of size getRowBytes() representing a single row
-        :type rowbytes: bytes
+        Request: `1d763000+bytes[2]:big_endian+0100+bytes[Printer.getRowBytes()*1]`.
+
+        Note: In case of A6+, preamble is `1d76300048000100` that can be viewed
+        as `[ 1d7630, 0030, 0001 ]`, where `1d7630` is printing operation
+        request, `0030` is big endian bytes per row, `0001` is big endian input
+        height.
+
+        Arguments:
+        * `rowbytes` - bytes representing image pixels, 8 pixels per byte,
+        truncated/padded to fit `Printer.getRowBytes()`.
+        * `delay` - delay between printing each row of the image.
         """
 
         expectedLen = self.getRowBytes()
         if len(rowbytes) < expectedLen:
-            rowbytes = rowbytes.ljust(expectedLen, bytes.fromhex('00'))
+            rowbytes = rowbytes.ljust(expectedLen, b'\0')
         elif len(rowbytes) > expectedLen:
             rowbytes = rowbytes[:expectedLen]
 
         self.reset()
 
         # Notify printer about incomming $expectedLen bytes row
-        if self.printer_type == PrinterType.A6:
-            self.tellPrinter(bytes.fromhex('1d76300030000100'))
-        elif self.printer_type == PrinterType.A6p:
-            self.tellPrinter(bytes.fromhex('1d76300048000100'))
-        else:
-            self.tellPrinter(bytes.fromhex('1d763000d8000100'))
-
-        self.tellPrinter(rowbytes)
+        request = bytes.fromhex('1d763000') + int.to_bytes(self.getRowBytes(), 1, 'big') + bytes.fromhex('000100') + rowbytes
+        self.tellPrinter(request)
+        time.sleep(delay)
 
         # We're done here
 
-    def printImageRowBytesList(self, imagebytes, delay=0.01):
+    def printImageRowBytesList(self, imagebytes: typing.Iterable[bytes], delay: float=0.01) -> None:
         """
-        Performs printing of the Image bytes. Image width expected to match getRowBytes(), in other
-        case it will be cut or pad with bytes.
-        Input image is being split into multiple pieces if height exceeds 0xff pixels. This should
-        be done because of the limitation in 0xffff pixels in height for single page, but i limit
-        by 0xff.
-        imagebytes defines the list with rows. Each row is defined by bytes.
-        For example: [0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff]
+        Send an array of bytes representing a multiple image rows in binary
+        black/white mode. If amount of bydes per row exceedes the
+        `Printer.getRowBytes()` constant, input is truncated. If size of input
+        is under the `Printer.getRowBytes()`, it will be padded with zeros.
 
-        :param imagebytes: array of bytes containing rows of the image
-        :type imagebytes: list
-        :param delay: delay between sending each row of the image
-        :type delay: float
+        This printer supports pages up to `0xffff` rows, but current
+        implementation relies on chunked data with height limit of `0xff` and
+        automatically slices the input into chunks.
+
+        Note: In case of A6+, preamble is `1d76300048000100` that can be viewed
+        as `[ 1d7630, 0030, 0001 ]`, where `1d7630` is printing operation
+        request, `0030` is big endian bytes per row, `0001` is big endian input
+        height.
+
+        Request: chunked `1d763000+bytes[1]:big_endian+00+bytes[1]:big_endian+00+bytes[Printer.getRowBytes()*chunk_height]`.
+
+        Arguments:
+        * `imagebytes` - list of bytes defining each row of the image. If row
+        length does not match the `Printer.getRowBytes()`, data is
+        truncated/padded to match the size.
+        * `delay` - delay between printing each row of the image.
         """
 
-        imgHeight = len(imagebytes)
+        if len(imagebytes) == 0:
+            return
+
         expectedLen = self.getRowBytes()
-        nPieces = math.ceil(imgHeight / 0xff)
-        restPixels = imgHeight % 0xff
+        chunks = [ imagebytes[i:i+0xff] for i in range(0, len(imagebytes), 0xff) ]
 
-        for i in range(nPieces):
-            # Size of each print is 0xff, but last print has size restPixels
-            height = 0xff if i < nPieces-1 else restPixels
-            heightHex = 'ff' if i < nPieces-1 else '{0:0{1}X}'.format(restPixels, 2)
+        for chunk in chunks:
 
+            # Reset state before print
             self.reset()
 
-            # Notify printer about incomming $expectedLen bytes row
-            if self.printer_type == PrinterType.A6:
-                self.tellPrinter(bytes.fromhex(f'1d7630003000{heightHex}00'))
-            elif self.printer_type == PrinterType.A6p:
-                self.tellPrinter(bytes.fromhex(f'1d7630004800{heightHex}00'))
-            else:
-                self.tellPrinter(bytes.fromhex(f'1d763000d800{heightHex}00'))
+            #                 1d763000    30                    00    01                     00
+            # Send preamble: `1d763000` + row_bytes:bytes[1] + `00` + chunk_size:bytes[1] + `00`
+            request = bytes.fromhex('1d763000') + int.to_bytes(self.getRowBytes(), 1, 'big') + bytes.fromhex('00') + int.to_bytes(len(chunk), 1, 'big') + bytes.fromhex('00')
 
+            # Flush preamble
+            self.tellPrinter(request)
 
-            for j in range(height):
-                rowbytes = imagebytes[i*0xff+j]
+            # Flush rows dith delay
+            for row in chunk:
+                # trunc/pad
+                if len(row) < expectedLen:
+                    row = row.ljust(expectedLen, b'\0')
+                elif len(row) > expectedLen:
+                    row = row[:expectedLen]
 
-                if len(rowbytes) < expectedLen:
-                    rowbytes = rowbytes.ljust(expectedLen, bytes.fromhex('00'))
-                elif len(rowbytes) > expectedLen:
-                    rowbytes = rowbytes[:expectedLen]
-
-                self.tellPrinter(rowbytes)
+                self.tellPrinter(row)
 
                 time.sleep(delay)
 
-    def printImageBytes(self, imagebytes, delay=0.01):
+    def printImageBytes(self, imagebytes: bytes, delay: float=0.01) -> None:
         """
-        Performs printing of the Image bytes. Image width expected to match getRowBytes(), in other
-        case it will shift while printing and the last for not matching length of getRowBytes()
-        will be cut.
-        Input image is being split into multiple pieces if height exceeds 0xff pixels. This should
-        be done because of the limitation in 0xffff pixels in height for single page, but i limit
-        by 0xff.
-        imagebytes defines the entime image despite to printImageBytesList argument
-        For example: [0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff] will be defined as
-        0xff00000000ff00000000ff00000000ff.
+        Send an bytes representing single-line encoded image. For example,
+        `[0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff]` is encoded as
+        `0xff00000000ff00000000ff00000000ff`.
 
-        :param imagebytes: bytes containing rows of the image
-        :type imagebytes: bytes
-        :param delay: delay between sending each row of the image
-        :type delay: float
+        Image must be valid aligned and sequence size must divide by
+        `Printer.getRowBytes()`. In case of partial data, the rest of partial
+        data is padded with zeros. Number of lines is calcualted as
+        `nlines = ceil(len(imagebytes) / Printer.getRowBytes())`.
+
+        Arguments:
+        * `imagebytes` - bytes defining concatenated rows of the image. Each
+        row must be aligned to `Printer.getRowBytes()` in order to display
+        properly. If length of the last row dows not match
+        `Printer.getRowBytes()`, data is truncated/padded to match the size.
+        * `delay` - delay between printing each row of the image.
         """
 
-        expectedLen = self.getRowBytes()
-        imgHeight = math.floor(len(imagebytes) / expectedLen)
-        nPieces = math.ceil(imgHeight / 0xff)
-        restPixels = imgHeight % 0xff
+        if len(imagebytes) == 0:
+            return
 
-        for i in range(nPieces):
-            self.reset()
+        # Delegate to impl
+        self.printImageRowBytesList([ imagebytes[i:i+self.getRowBytes()] for i in range(0, len(imagebytes), self.getRowBytes()) ], delay=delay)
 
-            # Size of each print is 0xff, because last part is cut off
-            height = 0xff if i < nPieces-1 else restPixels
-            heightHex = 'ff' if i < nPieces-1 else '{0:0{1}X}'.format(restPixels, 2)
-
-            # Notify printer about incomming $expectedLen bytes row
-            if self.printer_type == PrinterType.A6:
-                self.tellPrinter(bytes.fromhex(f'1d7630003000{heightHex}00'))
-            elif self.printer_type == PrinterType.A6p:
-                self.tellPrinter(bytes.fromhex(f'1d7630004800{heightHex}00'))
-            else:
-                self.tellPrinter(bytes.fromhex(f'1d763000d800{heightHex}00'))
-
-
-            for j in range(height):
-                self.tellPrinter(imagebytes[(i*0xff+j)*expectedLen:(i*0xff+(j+1))*expectedLen])
-
-                time.sleep(delay)
-
-    def printImage(self, img, delay=0.01, resample=PIL.Image.NEAREST):
+    def printImage(self, img: PIL.Image.Image, delay=0.01, resample=PIL.Image.Resampling.NEAREST) -> None:
         """
-        Performs printing of PIL image. Image is being rescaled to match width of getRowPixels().
-        Result image is converted to '1' binary mode. If image width exceeds limit of 0xff pixels
-        in heigth, it will be split into multiple parts.
+        Print PIL Image on this printer with automatic internal to-blackwhite
+        conversion.
 
-        :param img: image to print
-        :type img: Image
-        :param delay: delay between sending each row of the image
-        :type delay: float
-        :param resample: image resampling mode (Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.ANTIALIAS)
+        WARNING: In order to prevent the overhead of the printer (and possibly
+        loose some data but to limitations of the in-printer buffer) it is
+        suggested to split image into many vertical pieces and wait a
+        reasonable amount of time to let the printer to cooldown.
+
+        Arguments:
+        * `img` - your pretty PIL Image.
+        * `delay` - delay between printing each row of the image.
+        * `resample` - resampling mode of the image, used to automatically
+        rescale image to fit the printer width of `Printer.getRowWidth()`.
         """
 
         img = img.convert('L')
@@ -799,96 +793,61 @@ class Printer:
         img = img.convert('1')
 
         imgbytes = img.tobytes()
-        self.printImageBytes(imgbytes)
+        self.printImageBytes(imgbytes, delay=delay)
 
-    def printQR(self, text, delay=0.01, resample=PIL.Image.NEAREST):
+    def printQR(self, text: str, delay: float=0.01, resample=PIL.Image.Resampling.NEAREST) -> None:
         """
-        Generates QR code from specified string and prints it out.
+        Generate a QR code from specified string and print it.
 
-        :param text: Text for qr code
-        :tapy text: str
-        :param delay: delay between sending each row of the image
-        :type delay: float
-        :param resample: image resampling mode (Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.ANTIALIAS)
-        """
-
-        self.printImage(qrcode.make(text, border=0), delay, resample)
-
-    def printRowBytesIterator(self, rowiterator, delay=0.25):
-        """
-        Allows printing image using iterator / generator that should return bytes
-        of row as result. If amount of returned bytes do not match getRowBytes(),
-        they will be pad or cut.
-
-        :param rowiterator: iterator or generator returning bytes describing rows of the image.
-        :param delay: delay between sending each row
-        :type delay: float
+        Arguments:
+        * `text` - your pretty text.
+        * `delay` - delay between printing each row of the image.
+        * `resample` - resampling mode of the image, used to automatically
+        rescale image to fit the printer width of `Printer.getRowWidth()`.
         """
 
-        for r in rowiterator:
-            self.printRow(r)
-            time.sleep(delay)
+        self.printImage(qrcode.make(text, border=0), delay=delay, resample=resample)
 
-
-    def printRowIterator(self, rowiterator, delay=0.25):
+    def printRowBytesIterator(self, rowiterator: typing.Iterable[bytes], delay: float=0.01) -> None:
         """
-        Allows printing image using iterator / generator that should return image size of
-        (getRowWidth(), 1) as result. Returned image is geing resampled and printed as a row.
-        This function does not perform check if this image is really (getRowWidth(), 1) pixels
-        size and just passes it to the printImage() repeatly
+        Iterate over the given iterator and print out all produced rows. This
+        method is very slow as it required printer to oftenly switch on/off
+        printing mode and pass a large overhead to set up the printing mode.
 
-        :param rowiterator: iterator or generator returning image for each row.
-        :param delay: delay between sending each row
-        :type delay: float
+        This method uses the `Printer.printRow()` call.
+
+        Arguments:
+        * `rowiterator` - iterator that returns bytes.
+        * `delay` - delay between printing each row of the image.
         """
 
         for r in rowiterator:
-            self.printImage(r)
-            time.sleep(delay)
+            self.printRow(r, delay=delay)
 
-    def printRowBytesIteratorOfSize(self, rowiterator, rowcount, delay=0.01):
+    def printRowChunksIterator(self, rowiterator: typing.Iterable[typing.List[bytes]], delay: float=0.01) -> None:
         """
-        Allows printing image using iterator / generator that should return bytes
-        of row as result. If amount of returned bytes do not match getRowBytes(),
-        they will be pad or cut.
-        Additional parameter for this function is amount of rows that should be
-        reserved for printing. This is usefull for printing long procedural
-        generated pages when printing using single row commit is too slow.
+        Iterate over the given iterator and print out all produced chunks of
+        rows. One chunk of rows is a list of bytes where each bytes define the
+        specific line of the image. This method is better than the use of
+        `Printer.printRowBytesIterator()` as it passes each chunk of image data
+        directly into the `Printer.printImageRowBytesList()`.
 
-        :param rowiterator: iterator or generator returning bytes describing rows of the image.
-        :param rowcount: amount of rows to reserve for printing in range (0x1, 0xffff)
-        :type rowcount: int
-        :param delay: delay between sending each row
-        :type delay: float
+        Arguments:
+        * `rowiterator` - iterator that returns list[bytes].
+        * `delay` - delay between printing each row of the image.
         """
 
-        rowcount = min(0xffff, max(0x1, rowcount))
-        rowcountstr = '{0:0{1}X}'.format(rowcount, 4)
-        rowcountstr = rowcountstr[2:4] + rowcountstr[0:2]
+        for chunk in rowiterator:
+            self.printImageRowBytesList(chunk, delay=delay)
 
-        self.reset()
+    def printImageIterator(self, imgiterator: typing.Iterable[PIL.Image.Image], delay: float=0.01):
+        """
+        Iterate over iterator and print out each PIL Image that it returns.
 
-        # Notify printer about incomming bytes
-        if self.printer_type == PrinterType.A6:
-            self.tellPrinter(bytes.fromhex(f'1d7630003000{rowcountstr}'))
-        elif self.printer_type == PrinterType.A6p:
-            self.tellPrinter(bytes.fromhex(f'1d7630004800{rowcountstr}'))
-        else:
-            raise ValueError('Unsupported printer type')
+        Arguments:
+        * `rowiterator` - iterator that returns list[bytes].
+        * `delay` - delay between printing each row of the image.
+        """
 
-        expectedLen = self.getRowBytes()
-
-        for i, r in enumerate(rowiterator):
-            rowbytes = r
-
-            if len(rowbytes) < expectedLen:
-                rowbytes = rowbytes.ljust(expectedLen, bytes.fromhex('00'))
-            elif len(rowbytes) > expectedLen:
-                rowbytes = rowbytes[:expectedLen]
-
-            self.tellPrinter(rowbytes)
-
-            time.sleep(delay)
-
-            if i == rowcount - 1:
-                break
+        for img in imgiterator:
+            self.printImage(img, delay=delay)
