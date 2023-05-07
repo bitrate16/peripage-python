@@ -2,7 +2,7 @@
 
 # Requirements:
 # $ sudo apt install bluetooth bluez libbluetooth-dev libopenjp2-7
-# $ pip3 install Pillow aiohttp aiohttp_middlewares ppa6 python-dateutil
+# $ pip3 install Pillow aiohttp aiohttp_middlewares peripage python-dateutil
 
 # Run with
 # $ python3 -m print-server
@@ -13,11 +13,10 @@ import io
 import os
 import aiohttp.web
 import aiohttp_middlewares
-import ppa6
+import peripage
 import atexit
 import PIL
 import sys
-import time
 
 from dateutil import tz
 from datetime import datetime
@@ -25,7 +24,7 @@ from datetime import datetime
 from . import print_service
 
 # Config
-PRINTER_MODEL = ppa6.PrinterType.A6p
+PRINTER_MODEL = peripage.PrinterType.A6p
 PRINTER_MAC   = '00:15:83:15:bc:5f'
 SERVER_PORT   = 11001
 BREAK_SIZE    = 100
@@ -55,7 +54,7 @@ def print_break(timestamp, date, ip, proxy_ip):
     Simple page break of given size
     """
 
-    def wrap_print_break(p: ppa6.Printer):
+    def wrap_print_break(p: peripage.Printer):
         p.printBreak(BREAK_SIZE)
         log(ip, '/', proxy_ip, '#', date, timestamp, 'done', 'BREAK')
 
@@ -116,7 +115,7 @@ async def post_print_ascii(request: aiohttp.web.Request):
         concenttration = 0
 
     # Submit image printing task
-    def wrap_print_ascii(p: ppa6.Printer):
+    def wrap_print_ascii(p: peripage.Printer):
         p.setConcentration(concenttration)
         p.printASCII(ascii_text)
         p.flushASCII()
@@ -185,7 +184,7 @@ async def post_print_image(request: aiohttp.web.Request):
             concenttration = 0
 
         # Submit image printing task
-        def wrap_print_image(p: ppa6.Printer):
+        def wrap_print_image(p: peripage.Printer):
             p.setConcentration(concenttration)
             p.printImage(img)
             log(request.remote, '/', request.headers.get('X-Forwarded-For', 'None'), '#', date, timestamp, 'done', 'Image')

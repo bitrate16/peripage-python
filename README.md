@@ -1,15 +1,15 @@
-# ppa6-python
-### Python module for printing on Peripage A6 and A6+
+# peripage-python
+### Python module for printing on Peripage printers
 
 **This project is a continued development of the [original project](https://github.com/eliasweingaertner/peripage-A6-bluetooth) made by [Elias Weingärtner](https://github.com/eliasweingaertner). This module combined all results of reverse engineering of the Peripage A6/A6+ protocol in a python utility providing interface and CLI tool for printing on this thermal printer.**
 
 ## [The original introduction](https://github.com/eliasweingaertner/peripage-A6-bluetooth#introduction)
 
-The Peripage A6 F622 is an inexpensive portable thermal printer. It provides both Bluetooth and USB connectivity. Unlike most other thermo printers it **does not** seem to support ESC/POS or any other standardized printer control language. 
+The Peripage A6 F622 is an inexpensive portable thermal printer. It provides both Bluetooth and USB connectivity. Unlike most other thermo printers it **does not** seem to support ESC/POS or any other standardized printer control language.
 
 So far, the Peripage A6 F622 can be only controlled using a proprietary app (iOS / Anndroid). There is also a driver for Windows with many limitations, most notably the need of defining a page size before printing; this is a huge limitation, as the Peripage prints on continuous form paper.
 
-The script provided here was built based on an analysis of captured Bluetooth traffic between the printer and an Android device. The Peripage A6 uses the serial profile (BTSPP) and RFCOMM. 
+The script provided here was built based on an analysis of captured Bluetooth traffic between the printer and an Android device. The Peripage A6 uses the serial profile (BTSPP) and RFCOMM.
 
 Essentially, the script takes an input images, scales it to the printers native X resolution of 384 pixels, and then sends it to the printer.
 
@@ -40,7 +40,7 @@ pip install . --user
 **Install from pypi using pip**
 
 ```
-pip install ppa6
+pip install peripage
 ```
 
 ## Dependencies
@@ -105,55 +105,50 @@ Scanning bluetooth devices... please wait.
 **On linux**
 
 Install module and run
-`ppa6 <args>`
+`peripage <args>`
 
 **On windows**
 
 Install module and run
-`python -m ppa6 <args>`
+`python -m peripage <args>`
 
 ### Options
 
 ```
-usage: ppa6 [-h] -m MAC [-c [0-2]] [-b [0-255]] [-p {A6,A6p,A6+}] [-n]
-                   (-t TEXT | -s | -i IMAGE | -q QR | -e)
+$ python -m peripage -h
+usage: __main__.py [-h] -m MAC [-c [0-2]] [-b [0-255]] -p {A6,A6p,A40} (-t TEXT | -s | -i IMAGE | -q QR | -e)
 
-Print on a Peripage A6 / A6+ via bluetooth
+Print on a Peripage printer via bluetooth
 
 optional arguments:
   -h, --help            show this help message and exit
   -m MAC, --mac MAC     Bluetooth MAC address of the printer
   -c [0-2], --concentration [0-2]
-                        Concentration value for printing (0, 1, 2)
+                        Concentration value for printing (temperature)
   -b [0-255], --break [0-255]
-                        Size of the break that should be inserted after the
-                        print (max 255)
-  -p {A6,A6p,A6+}, --printer {A6,A6p,A6+}
-                        Printer model name (A6 or A6+/A6p (both allowed))
-  -n, --newline         Force printer to add newline at the end of the printed
-                        text and flush the buffer
-  -t TEXT, --text TEXT  ASCII text that should be printed. Add a line break at
-                        the end of the string to avoid it being cut. String
-                        can be empty, so just page break will be printed
-  -s, --stream          Reads an input from stdin and prints as ASCII text
+                        Size of the break inserted after printed image or text
+  -p {A6,A6p,A40}, --printer {A6,A6p,A40}
+                        Printer model selection
+  -t TEXT, --text TEXT  ASCII text to print. Text must be ASCII-safe and will be filtered for invalid characters
+  -s, --stream          Print text received from STDIN, line by line. Text must be ASCII-safe and will be filtered for invalid characters
   -i IMAGE, --image IMAGE
-                        Path to the image that should be printed
-  -q QR, --qr QR        String for QR code print
-  -e, --introduce       Ask the printer to introduce himself
+                        Path to the image for printing
+  -q QR, --qr QR        String to convert into a QR code for printing
+  -e, --introduce       Ask the printer to introduce itself
 ```
 
 ### Print image example
 
-**Print image from [file](https://github.com/bitrate16/ppa6-python/blob/main/honk.png) with following break for 100px and concentration set to 2 (HIGH) on A6+**
+**Print image from [file](https://github.com/bitrate16/peripage-python/blob/main/honk.png) with following break for 100px and concentration set to 2 (HIGH) on A6+**
 ```
-ppa6 -m 00:15:83:15:bc:5f -p A6p -b 100 -c 2 -i honk.png
+peripage -m 00:15:83:15:bc:5f -p A6p -b 100 -c 2 -i honk.png
 ```
 
 ### Print text example
 
 **Print some random text followed by newline and break for 100px on A6+**
 ```
-ppa6 -m 00:15:83:15:bc:5f -p A6p -b 100 -t "HONK" -n
+peripage -m 00:15:83:15:bc:5f -p A6p -b 100 -t "HONK" -n
 ```
 Newline is required to fush the internal printer buffer and force it to print all text without cutting
 
@@ -161,7 +156,7 @@ Newline is required to fush the internal printer buffer and force it to print al
 
 **Print 50 text tasks on A6+**
 ```python
-import ppa6
+import peripage
 import print_service
 
 # Ping battery every 60 seconds
@@ -170,7 +165,7 @@ import print_service
 # Wait 1 second before send after connecting/reconnecting to printer
 # Print only after pinging printer and waiting for 1 second
 service = print_service.PrintService(60, 5, 5, 1, 1)
-service.start('00:15:83:15:bc:5f', ppa6.PrinterType.A6p)
+service.start('00:15:83:15:bc:5f', peripage.PrinterType.A6p)
 for i in range(50):
 	service.add_print_ascii(f'number {i}', flush=True)
 ```
@@ -186,7 +181,7 @@ Newline is required to fush the internal printer buffer and force it to print al
 
 ## Code example
 
-View this [python notebook](https://github.com/bitrate16/ppa6-python/blob/main/notebooks/ppa6-tutorial.ipynb) for tutorial
+View this [python notebook](https://github.com/bitrate16/peripage-python/blob/main/notebooks/peripage-tutorial.ipynb) for tutorial
 
 ## Printer disassembly
 
@@ -223,4 +218,4 @@ SOFTWARE.**
 
 ## License
 
-[MIT License](https://github.com/bitrate16/ppa6-python/blob/main/LICENSE)
+[MIT License](https://github.com/bitrate16/peripage-python/blob/main/LICENSE)

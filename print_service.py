@@ -8,7 +8,7 @@ import time
 import threading
 import PIL
 
-import ppa6
+import peripage
 
 
 class Repeat():
@@ -96,7 +96,7 @@ class PrintService:
 		self.service: Repeat = None
 
 		# Instance of printer
-		self.printer: ppa6.Printer = None
+		self.printer: peripage.Printer = None
 
 		# Event queue
 		self.events = []
@@ -104,7 +104,7 @@ class PrintService:
 		# Indicate service failture
 		self.service_failture = True
 
-	def start(self, printer_mac: str, printer_type: ppa6.PrinterType, timeout: float = 1.0, concentration: int = 1):
+	def start(self, printer_mac: str, printer_type: peripage.PrinterType, timeout: float = 1.0, concentration: int = 1):
 		"""
 		Perform startup oof the service without check for previous instance running.
 		"""
@@ -180,7 +180,7 @@ class PrintService:
 						pass
 
 		self.concentration = concentration
-		self.printer = ppa6.Printer(printer_mac, printer_type, timeout)
+		self.printer = peripage.Printer(printer_mac, printer_type, timeout)
 		self.last_ping_timestamp = time.time()
 		self.events = []
 		self.service = Repeat(self.event_interval, service_handler)
@@ -224,11 +224,11 @@ class PrintService:
 		Set to None to ignore.
 
 		`break_size` defines the break size to print after the text. Refers to
-		`ppa6.Printer.printBreak()` for value limitations. Set to None or 0 to
+		`peripage.Printer.printBreak()` for value limitations. Set to None or 0 to
 		ignore.
 
 		`flush` allows force flushing ASCII buffer. Refers to
-		`ppa6.Printer.flushASCII()`.
+		`peripage.Printer.flushASCII()`.
 
 
 		Example:
@@ -237,7 +237,7 @@ class PrintService:
 		```
 		"""
 
-		def wrap_print(printer: ppa6.Printer):
+		def wrap_print(printer: peripage.Printer):
 			if concentration is not None:
 				printer.setConcentration(concentration)
 
@@ -265,7 +265,7 @@ class PrintService:
 		Set to None to ignore.
 
 		`break_size` defines the break size to print after the image. Refers to
-		`ppa6.Printer.printBreak()` for value limitations. Set to None or 0 to
+		`peripage.Printer.printBreak()` for value limitations. Set to None or 0 to
 		ignore.
 
 
@@ -275,7 +275,7 @@ class PrintService:
 		```
 		"""
 
-		def wrap_print(printer: ppa6.Printer):
+		def wrap_print(printer: peripage.Printer):
 			if concentration is not None:
 				printer.setConcentration(concentration)
 
@@ -295,7 +295,7 @@ class PrintService:
 		Adds simple print break event to queue.
 
 		`break_size` defines the break size to print after the image. Refers to
-		`ppa6.Printer.printBreak()` for value limitations. Set to None or 0 to
+		`peripage.Printer.printBreak()` for value limitations. Set to None or 0 to
 		ignore.
 
 

@@ -7,7 +7,7 @@ Simple utility for creating standalone print server for peripage A6/A6+ thermal 
 Edit config in `__main__.py`
 ```python
 # Config
-PRINTER_MODEL = ppa6.PrinterType.A6p
+PRINTER_MODEL = peripage.PrinterType.A6p
 PRINTER_MAC   = '00:15:83:15:bc:5f'
 SERVER_PORT   = 11001
 BREAK_SIZE    = 100
@@ -49,7 +49,7 @@ $ sudo apt install bluetooth bluez libbluetooth-dev libopenjp2-7
 
 Packages:
 ```
-$ pip3 install Pillow aiohttp aiohttp_middlewares ppa6 python-dateutil
+$ pip3 install Pillow aiohttp aiohttp_middlewares peripage python-dateutil
 ```
 
 # Usage

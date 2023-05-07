@@ -7,7 +7,7 @@
 def main():
     import argparse
     import sys
-    import ppa6
+    import peripage
     import PIL.Image
 
     parser = argparse.ArgumentParser(description='Print on a Peripage printer via bluetooth')
@@ -37,7 +37,7 @@ def main():
     parser.add_argument(
         '-p', '--printer',
         help='Printer model selection',
-        choices=ppa6.PrinterType.names(),
+        choices=peripage.PrinterType.names(),
         type=str,
         required=True
     )
@@ -72,7 +72,7 @@ def main():
     args = parser.parse_args()
 
     # Open connection
-    printer = ppa6.Printer(args.mac, ppa6.PrinterType[args.printer])
+    printer = peripage.Printer(args.mac, peripage.PrinterType[args.printer])
     printer.connect()
     printer.reset()
 
