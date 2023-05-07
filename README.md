@@ -24,6 +24,10 @@ Essentially, the script takes an input images, scales it to the printers native 
 * Configuring print concentration (temperature)
 * Changing printer serial number
 * Configuring printer poweroff timeout
+* Supported printers:
+  * Peripage A6
+  * Peripage A6+
+  * Peripage A40
 
 ## Prerequisites
 
