@@ -1,4 +1,4 @@
 Pillow>=8.2.0
-argparse==1.1
-PyBluez>=0.23
+argparse>=1.1
+PyBluez @ git+https://github.com/pybluez/pybluez@master#egg=pybluez
 qrcode>=6.1
