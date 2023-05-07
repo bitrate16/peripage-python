@@ -208,7 +208,7 @@ View this [python notebook](https://github.com/bitrate16/peripage-python/blob/ma
 
 * Fix page sometimes get cutted off for some rows
 * Fix delays
-* Python 2.7 support
+* ~~Python 2.7 support~~ (Don't need)
 * Implement overheat protection
 * Implement cover open handler
 * Tweak wait timings to precisely match printing speed
