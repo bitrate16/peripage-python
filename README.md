@@ -13,6 +13,10 @@ The script provided here was built based on an analysis of captured Bluetooth tr
 
 Essentially, the script takes an input images, scales it to the printers native X resolution of 384 pixels, and then sends it to the printer.
 
+## Deprecation Warning
+
+**The latest version ot `ppa6-python` module is deprecated due the major update with new models support and better module naming**
+
 ## Features
 
 * Printing text of any length encoded in ASCII
