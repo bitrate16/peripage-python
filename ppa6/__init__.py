@@ -12,11 +12,9 @@ __copyright__ = 'Copyright (c) MIT 2021-2023 bitrate16'
 
 
 import time
-import math
 import qrcode
 import typing
 import enum
-import socket
 import bluetooth
 
 import PIL.Image
@@ -300,7 +298,7 @@ class Printer:
         Example: Peripage A6+ returns `V2.11_304dpi`.
         """
 
-        return self.askPrinter('10ff20f1')
+        return self.askPrinter(bytes.fromhex('10ff20f1'))
 
     def getDeviceBattery(self) -> int:
         """
@@ -507,7 +505,7 @@ class Printer:
         """
 
         size = min(0xff, max(0x01, size))
-        request = f'1b4a' + int.to_bytes(size, 1, 'big')
+        request = bytes.fromhex('1b4a') + int.to_bytes(size, 1, 'big')
 
         self.tellPrinter(request)
 
@@ -606,7 +604,7 @@ class Printer:
                 time.sleep(delay)
 
             # Flush if white-empty, because it is newline
-            if len(l.strip()) == 0:
+            elif len(l.strip()) == 0:
 
                 # Flush in-printer buffer if not empty
                 if len(self.print_buffer) != 0:
@@ -628,7 +626,7 @@ class Printer:
                 for p in parts:
 
                     # Print full line
-                    if len(l) == self.getRowCharacters():
+                    if len(p) == self.getRowCharacters():
                         self.tellPrinter(p.encode('ascii'))
                         self.tellPrinter(b'\n')
                         time.sleep(delay)
@@ -690,7 +688,7 @@ class Printer:
 
         # We're done here
 
-    def printImageRowBytesList(self, imagebytes: typing.Iterable[bytes], delay: float=0.01) -> None:
+    def printRowBytesList(self, rowbytes: typing.Iterable[bytes], delay: float=0.01) -> None:
         """
         Send an array of bytes representing a multiple image rows in binary
         black/white mode. If amount of bydes per row exceedes the
@@ -709,17 +707,17 @@ class Printer:
         Request: chunked `1d763000+bytes[1]:big_endian+00+bytes[1]:big_endian+00+bytes[Printer.getRowBytes()*chunk_height]`.
 
         Arguments:
-        * `imagebytes` - list of bytes defining each row of the image. If row
+        * `rowbytes` - list of bytes defining each row of the image. If row
         length does not match the `Printer.getRowBytes()`, data is
         truncated/padded to match the size.
         * `delay` - delay between printing each row of the image.
         """
 
-        if len(imagebytes) == 0:
+        if len(rowbytes) == 0:
             return
 
         expectedLen = self.getRowBytes()
-        chunks = [ imagebytes[i:i+0xff] for i in range(0, len(imagebytes), 0xff) ]
+        chunks = [ rowbytes[i:i+0xff] for i in range(0, len(rowbytes), 0xff) ]
 
         for chunk in chunks:
 
@@ -744,69 +742,6 @@ class Printer:
                 self.tellPrinter(row)
 
                 time.sleep(delay)
-
-    def printImageBytes(self, imagebytes: bytes, delay: float=0.01) -> None:
-        """
-        Send an bytes representing single-line encoded image. For example,
-        `[0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff]` is encoded as
-        `0xff00000000ff00000000ff00000000ff`.
-
-        Image must be valid aligned and sequence size must divide by
-        `Printer.getRowBytes()`. In case of partial data, the rest of partial
-        data is padded with zeros. Number of lines is calcualted as
-        `nlines = ceil(len(imagebytes) / Printer.getRowBytes())`.
-
-        Arguments:
-        * `imagebytes` - bytes defining concatenated rows of the image. Each
-        row must be aligned to `Printer.getRowBytes()` in order to display
-        properly. If length of the last row dows not match
-        `Printer.getRowBytes()`, data is truncated/padded to match the size.
-        * `delay` - delay between printing each row of the image.
-        """
-
-        if len(imagebytes) == 0:
-            return
-
-        # Delegate to impl
-        self.printImageRowBytesList([ imagebytes[i:i+self.getRowBytes()] for i in range(0, len(imagebytes), self.getRowBytes()) ], delay=delay)
-
-    def printImage(self, img: PIL.Image.Image, delay=0.01, resample=PIL.Image.Resampling.NEAREST) -> None:
-        """
-        Print PIL Image on this printer with automatic internal to-blackwhite
-        conversion.
-
-        WARNING: In order to prevent the overhead of the printer (and possibly
-        loose some data but to limitations of the in-printer buffer) it is
-        suggested to split image into many vertical pieces and wait a
-        reasonable amount of time to let the printer to cooldown.
-
-        Arguments:
-        * `img` - your pretty PIL Image.
-        * `delay` - delay between printing each row of the image.
-        * `resample` - resampling mode of the image, used to automatically
-        rescale image to fit the printer width of `Printer.getRowWidth()`.
-        """
-
-        img = img.convert('L')
-        img = PIL.ImageOps.invert(img)
-        img = img.resize((self.getRowWidth(), int(self.getRowWidth() / img.size[0] * img.size[1])), resample)
-        img = img.convert('1')
-
-        imgbytes = img.tobytes()
-        self.printImageBytes(imgbytes, delay=delay)
-
-    def printQR(self, text: str, delay: float=0.01, resample=PIL.Image.Resampling.NEAREST) -> None:
-        """
-        Generate a QR code from specified string and print it.
-
-        Arguments:
-        * `text` - your pretty text.
-        * `delay` - delay between printing each row of the image.
-        * `resample` - resampling mode of the image, used to automatically
-        rescale image to fit the printer width of `Printer.getRowWidth()`.
-        """
-
-        self.printImage(qrcode.make(text, border=0), delay=delay, resample=resample)
 
     def printRowBytesIterator(self, rowiterator: typing.Iterable[bytes], delay: float=0.01) -> None:
         """
@@ -838,7 +773,57 @@ class Printer:
         """
 
         for chunk in rowiterator:
-            self.printImageRowBytesList(chunk, delay=delay)
+            self.printRowBytesList(chunk, delay=delay)
+
+    def printImageBytes(self, imagebytes: bytes, delay: float=0.01) -> None:
+        """
+        Send an bytes representing single-line encoded image. For example,
+        `[0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff]` is encoded as
+        `0xff00000000ff00000000ff00000000ff`.
+
+        Image must be valid aligned and sequence size must divide by
+        `Printer.getRowBytes()`. In case of partial data, the rest of partial
+        data is padded with zeros. Number of lines is calcualted as
+        `nlines = ceil(len(imagebytes) / Printer.getRowBytes())`.
+
+        Arguments:
+        * `imagebytes` - bytes defining concatenated rows of the image. Each
+        row must be aligned to `Printer.getRowBytes()` in order to display
+        properly. If length of the last row dows not match
+        `Printer.getRowBytes()`, data is truncated/padded to match the size.
+        * `delay` - delay between printing each row of the image.
+        """
+
+        if len(imagebytes) == 0:
+            return
+
+        # Delegate to impl
+        self.printRowBytesList([ imagebytes[i:i+self.getRowBytes()] for i in range(0, len(imagebytes), self.getRowBytes()) ], delay=delay)
+
+    def printImage(self, img: PIL.Image.Image, delay=0.01, resample=PIL.Image.Resampling.NEAREST) -> None:
+        """
+        Print PIL Image on this printer with automatic internal to-blackwhite
+        conversion.
+
+        WARNING: In order to prevent the overhead of the printer (and possibly
+        loose some data but to limitations of the in-printer buffer) it is
+        suggested to split image into many vertical pieces and wait a
+        reasonable amount of time to let the printer to cooldown.
+
+        Arguments:
+        * `img` - your pretty PIL Image.
+        * `delay` - delay between printing each row of the image.
+        * `resample` - resampling mode of the image, used to automatically
+        rescale image to fit the printer width of `Printer.getRowWidth()`.
+        """
+
+        img = img.convert('L')
+        img = PIL.ImageOps.invert(img)
+        img = img.resize((self.getRowWidth(), int(self.getRowWidth() / img.size[0] * img.size[1])), resample)
+        img = img.convert('1')
+
+        imgbytes = img.tobytes()
+        self.printImageBytes(imgbytes, delay=delay)
 
     def printImageIterator(self, imgiterator: typing.Iterable[PIL.Image.Image], delay: float=0.01):
         """
@@ -851,3 +836,16 @@ class Printer:
 
         for img in imgiterator:
             self.printImage(img, delay=delay)
+
+    def printQR(self, text: str, delay: float=0.01, resample=PIL.Image.Resampling.NEAREST) -> None:
+        """
+        Generate a QR code from specified string and print it.
+
+        Arguments:
+        * `text` - your pretty text.
+        * `delay` - delay between printing each row of the image.
+        * `resample` - resampling mode of the image, used to automatically
+        rescale image to fit the printer width of `Printer.getRowWidth()`.
+        """
+
+        self.printImage(qrcode.make(text, border=0), delay=delay, resample=resample)
