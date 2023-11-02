@@ -40,7 +40,7 @@ class PrinterTypeSpecs:
 class PrinterType(enum.Enum):
     """
     Defines names for supported printer types.
-    Currently supported printers are: Peripage A6, A6+, A40
+    Currently supported printers are: Peripage A6, A6+, A40, A40+
     """
 
     A6 = PrinterTypeSpecs(
@@ -59,6 +59,12 @@ class PrinterType(enum.Enum):
         row_bytes=216,
         row_width=1728,
         row_characters=144
+    )
+
+    A40p = PrinterTypeSpecs(
+        row_bytes=231,
+        row_width=1848,
+        row_characters=154
     )
 
     @classmethod

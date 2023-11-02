@@ -32,10 +32,11 @@ Essentially, the script takes an input images, scales it to the printers native 
   * Peripage A6
   * Peripage A6+
   * Peripage A40
+  * Peripage A40+
 
 ## Prerequisites
 
-* Peripage A6/A6+/A40/e.t.c printer
+* Peripage A6/A6+/A40/A40+/e.t.c printer
 * Python 3
 
 ## Installation
@@ -130,7 +131,7 @@ Install module and run
 
 ```
 $ python -m peripage -h
-usage: __main__.py [-h] -m MAC [-c [0-2]] [-b [0-255]] -p {A6,A6p,A40} (-t TEXT | -s | -i IMAGE | -q QR | -e)
+usage: __main__.py [-h] -m MAC [-c [0-2]] [-b [0-255]] -p {A6,A6p,A40,A40p} (-t TEXT | -s | -i IMAGE | -q QR | -e)
 
 Print on a Peripage printer via bluetooth
 
@@ -141,7 +142,7 @@ optional arguments:
                         Concentration value for printing (temperature)
   -b [0-255], --break [0-255]
                         Size of the break inserted after printed image or text
-  -p {A6,A6p,A40}, --printer {A6,A6p,A40}
+  -p {A6,A6p,A40,A40p}, --printer {A6,A6p,A40,A40p}
                         Printer model selection
   -t TEXT, --text TEXT  ASCII text to print. Text must be ASCII-safe and will be filtered for invalid characters
   -s, --stream          Print text received from STDIN, line by line. Text must be ASCII-safe and will be filtered for invalid characters
