@@ -3,13 +3,12 @@ from setuptools import setup
 setup(
     name = 'peripage',
     packages = ['peripage'],
-    version = '1.1',
+    version = '1.2',
     license='MIT',
     description = 'Utility for printing on Peripage printers via bluetooth',
     author = 'bitrate16',
     author_email = 'bitrate16@gmail.com',
     url = 'https://github.com/bitrate16/peripage-python',
-    download_url = 'https://github.com/bitrate16/peripage-python/archive/v1.1.tar.gz',
     keywords = ['PERIPAGE', 'BLUETOOTH', 'THERMAL PRINTER', 'PRINTER'],
     install_requires=[
         'PyBluez>=0.23',

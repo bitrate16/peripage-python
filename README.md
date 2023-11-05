@@ -236,17 +236,8 @@ View this [python notebook](https://github.com/bitrate16/peripage-python/blob/ma
 * [Elias Weingärtner](https://github.com/eliasweingaertner) for initial work in reverse-engineering bluetooth protocol
 * [bitrate16](https://github.com/bitrate16) for additional research and python module
 * [henryleonard](https://github.com/henryleonard) for specs of A40 printer
-
-## Disclaimer
-
-**THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.**
+* [anthony-foulfoin](https://github.com/anthony-foulfoin) for specs of A40+ printer
 
 ## License
 
-[MIT License](https://github.com/bitrate16/peripage-python/blob/main/LICENSE)
+[GPLv3 License](https://github.com/bitrate16/peripage-python/blob/main/LICENSE)
