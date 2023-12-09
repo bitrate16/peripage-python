@@ -17,6 +17,10 @@ Essentially, the script takes an input images, scales it to the printers native 
 
 **The latest version ot `ppa6-python` module is deprecated due the major update with new models support and better module naming**
 
+## Denial of responsibility
+
+The author and people associated with him are not responsible for the inoperability, breakdown, disruption and failure of software and hardware, as well as loss and damage to physical and software property as a result of the use of this software and related projects. Everything you do is at your own risk and responsibility.
+
 ## Features
 
 * Printing text of any length encoded in ASCII
