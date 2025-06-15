@@ -171,6 +171,58 @@ peripage -m 00:15:83:15:bc:5f -p A6p -b 100 -t "HONK" -n
 ```
 Newline is required to fush the internal printer buffer and force it to print all text without cutting
 
+### Create ruler example
+
+This will generate an image of ruler, approximately matching real centimeters (measured with unpreciese real ruler) on Periapge A6+
+
+```python
+
+WIDTH = 576
+WIDTH_MM = 48.5
+MM2PX = WIDTH / WIDTH_MM
+CM2PX = 10 * MM2PX
+TICKS = 100
+TICK_HEIGHT = 4
+TICK_WIDTH = 50
+
+
+import PIL
+import PIL.Image
+import PIL.ImageDraw
+import PIL.ImageFont
+
+
+image = PIL.Image.new('RGB', (WIDTH, int(MM2PX * 10 * (TICKS + 2))), (255, 255, 255))
+draw = PIL.ImageDraw.Draw(image)
+# font = PIL.ImageFont.truetype('/usr/share/fonts/gnu-free/FreeSans.ttf', 18)
+font = PIL.ImageFont.truetype('/usr/share/fonts/open-sans/OpenSans-Regular.ttf', 40)
+
+for tick in range(1, TICKS + 2):
+    for ty in range(TICK_HEIGHT):
+        for tx in range(TICK_WIDTH):
+            image.putpixel(
+                (
+                    int(tx),
+                    int(tick * CM2PX + ty),
+                ),
+                (0, 0, 0),
+            )
+
+        draw.text(
+            (
+                int(TICK_WIDTH * 2),
+                int(tick * CM2PX - 0.25 * CM2PX + ty),
+            ),
+            text=str(tick - 1),
+            font=font,
+            fill='black',
+        )
+
+
+image.save('ruler.png')
+
+```
+
 ## Print Service
 
 **Print 50 text tasks on A6+**
